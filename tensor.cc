@@ -52,38 +52,6 @@ template <uint8_t rank> std::ostream &operator<<(std::ostream &out, const Coordi
   return out;
 } 
 
-template <uint8_t rank, class Value> class Element {
-public:
-  Element(const Coordinate<rank> &coord, Value value)
-    : coord_(coord), value_(value) {}
-  bool operator<(const Element &other) const {
-    return coord_ < other.coord_;
-  }
-  void Print(std::ostream &os) const {
-    os << '[' << coord_ << ": " << value_ << ']';
-  }
-  const uint8_t coord(uint8_t r) const { return coord_.coord(r); }
-  const Coordinate<rank> &coord() const { return coord_; }
-  const Coordinate<rank - 1> coordExcept(uint8_t d) const {
-    Coordinate<rank - 1> result;
-    for (uint8_t r = 0; r < rank; ++r)
-      if (r < d)
-	result.Set(r, coord_.coord(r));
-      else if (r > d)
-	result.Set(r - 1, coord_.coord(r));
-    return result;
-  }
-  const Value &value() const { return value_; }
-private:
-  Coordinate<rank> coord_;
-  Value value_;
-};
-
-template <uint8_t rank, class Value> std::ostream &operator<<(std::ostream &out, const Element<rank, Value> element) {
-  element.Print(out);
-  return out;
-} 
-
 template <uint8_t rank, class Value> class Tensor {
 public:
   typedef std::pair<Coordinate<rank>, Value> EPair;
