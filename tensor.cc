@@ -64,11 +64,8 @@ public:
   void Set(Coordinate<rank> coord, Value value) {
     std::pair<typename std::map<Coordinate<rank>, Value>::iterator, bool> ret
 	= elements_.insert(EPair(coord, value));
-    if (!ret.second) {
-      // FIXME: quicker way?
-      elements_.erase(ret.first);
-      elements_.insert(EPair(coord, value));
-    }
+    if (!ret.second)
+      ret.first->second = value;
   }
   const Value &Get(Coordinate<rank> coord) const {
     typename std::map<Coordinate<rank>, Value>::const_iterator i = elements_.find(coord);
