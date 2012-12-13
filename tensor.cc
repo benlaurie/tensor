@@ -146,6 +146,25 @@ Contract2(const Tensor<rank1, Value> &t1, uint8_t d1,
   return result;
 };
 
+class DTensor1 : public Tensor<1, double> {
+public:
+  void Set(uint8_t c1, const double &value) {
+    uint8_t c[1];
+    c[0] = c1;
+    Tensor<1, double>::Set(c, value);
+  }
+};
+
+class DTensor2 : public Tensor<2, double> {
+public:
+  void Set(uint8_t c1, uint8_t c2, const double &value) {
+    uint8_t c[2];
+    c[0] = c1;
+    c[1] = c2;
+    Tensor<2, double>::Set(c, value);
+  }
+};
+
 class DTensor3 : public Tensor<3, double> {
 public:
   void Set(uint8_t c1, uint8_t c2, uint8_t c3, const double &value) {
@@ -154,6 +173,18 @@ public:
     c[1] = c2;
     c[2] = c3;
     Tensor<3, double>::Set(c, value);
+  }
+};
+
+class DTensor4 : public Tensor<4, double> {
+public:
+  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, const double &value) {
+    uint8_t c[4];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    c[3] = c4;
+    Tensor<4, double>::Set(c, value);
   }
 };
 
@@ -179,8 +210,16 @@ int main(int argc, char **argv) {
   Tensor<3, double> t4;
   t4 = Contract2(t1, 2, t2, 0);
 
+  DTensor1 t5;
+  t5.Set(1,34);
+
+  Tensor<0, double> t6;
+  t6 = Contract2(t5, 1, t5, 1);
+
   std::cout << t1 << std::endl;
   std::cout << t2 << std::endl;
   std::cout << t3 << std::endl;
   std::cout << t4 << std::endl;
+  std::cout << t5 << std::endl;
+  std::cout << t6 << std::endl;
 }
