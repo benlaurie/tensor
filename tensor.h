@@ -22,7 +22,7 @@ public:
   void Print(std::ostream &os) const {
     for (uint8_t r = 0; r < rank; ++r) {
       if (r != 0)
-	os << ", ";
+        os << ", ";
       os << (int)coords_[r];
     }
   }
@@ -66,6 +66,10 @@ public:
 	= elements_.insert(EPair(coord, value));
     if (!ret.second)
       ret.first->second = value;
+  }
+  const Value &Get(uint8_t coords[rank]) const {
+    Coordinate<rank> coord(coords);
+    return Get(coord);
   }
   const Value &Get(Coordinate<rank> coord) const {
     typename std::map<Coordinate<rank>, Value>::const_iterator i = elements_.find(coord);
@@ -178,12 +182,32 @@ public:
 
 class DTensor4 : public Tensor<4, double> {
 public:
-  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, const double &value) {
+  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4,
+      const double &value) {
     uint8_t c[4];
     c[0] = c1;
     c[1] = c2;
     c[2] = c3;
     c[3] = c4;
     Tensor<4, double>::Set(c, value);
+  }
+};
+
+class DTensor9 : public Tensor<9, double> {
+public:
+  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
+      uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9, const double &value) {
+    uint8_t c[9];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    c[3] = c4;
+    c[4] = c5;
+    c[5] = c6;
+    c[6] = c7;
+    c[7] = c8;
+    c[8] = c9;
+    Tensor<9, double>::Set(c, value);
+    Tensor<9, double>::Get(c);
   }
 };
