@@ -178,6 +178,13 @@ public:
     c[2] = c3;
     Tensor<3, double>::Set(c, value);
   }
+  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3) {
+    uint8_t c[3];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    return Tensor<3, double>::Get(c);
+  }
 };
 
 class DTensor4 : public Tensor<4, double> {
@@ -208,6 +215,5 @@ public:
     c[7] = c8;
     c[8] = c9;
     Tensor<9, double>::Set(c, value);
-    Tensor<9, double>::Get(c);
   }
 };
