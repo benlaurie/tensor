@@ -178,7 +178,7 @@ public:
     c[2] = c3;
     Tensor<3, double>::Set(c, value);
   }
-  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3) {
+  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3) const {
     uint8_t c[3];
     c[0] = c1;
     c[1] = c2;
