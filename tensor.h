@@ -62,8 +62,12 @@ public:
     Set(coord, value);
   }
   void Set(Coordinate<rank> coord, Value value) {
+    if (value == 0) {
+      elements_.erase(coord);
+      return;
+    }
     std::pair<typename std::map<Coordinate<rank>, Value>::iterator, bool> ret
-	= elements_.insert(EPair(coord, value));
+        = elements_.insert(EPair(coord, value));
     if (!ret.second)
       ret.first->second = value;
   }
@@ -216,4 +220,18 @@ public:
     c[8] = c9;
     Tensor<9, double>::Set(c, value);
   }
+  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
+        uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9) const {
+      uint8_t c[9];
+      c[0] = c1;
+      c[1] = c2;
+      c[2] = c3;
+      c[3] = c4;
+      c[4] = c5;
+      c[5] = c6;
+      c[6] = c7;
+      c[7] = c8;
+      c[8] = c9;
+      return Tensor<9, double>::Get(c);
+    }
 };
