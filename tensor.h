@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <string.h>
+#include <gsl/gsl_matrix.h>
 
 #include <iostream>
 #include <map>
-#include <set>
 
 template <uint8_t rank> class Coordinate {
 public:
@@ -91,8 +91,25 @@ public:
     }
   }
   const std::map<Coordinate<rank>, Value> &elements() const { return elements_; }
+  gsl_matrix* GetGSLMatrix(uint8_t coords[rank - 2], uint8_t mrow, uint8_t mcol,
+      uint8_t mrow_size, uint8_t mcol_size) {
+    gsl_matrix *M = gsl_matrix_calloc(mrow_size, mrow_size);
+    uint8_t full_coords[rank];
+    uint8_t d = 0;
+    for (uint8_t i = 0; i < rank; ++i)
+      if (i != mrow && i != mcol) {
+        full_coords[i] = coords[d];
+        ++d;
+      }
+    for (uint8_t i = 0; i < mrow_size; ++i)
+      for (uint8_t j = 0; j < mcol_size; ++j) {
+        full_coords[mrow] = i;
+        full_coords[mcol] = j;
+        gsl_matrix_set(M, i, j, Get(full_coords));
+      }
+    return M;
+  }
 private:
-  // FIXME: make this a map<Coordinate<rank>, Value>?
   std::map<Coordinate<rank>, Value> elements_;
 };
 
@@ -104,7 +121,7 @@ template <uint8_t rank, class Value> std::ostream &operator<<(std::ostream &out,
 template <uint8_t rank1, uint8_t rank2, class Value>
 Tensor<rank1 + rank2 - 1, Value>
 Contract(const Tensor<rank1, Value> &t1, uint8_t d1,
-	 const Tensor<rank2, Value> &t2, uint8_t d2) {
+    const Tensor<rank2, Value> &t2, uint8_t d2) {
   typedef std::multimap<uint8_t, const std::pair<const Coordinate<rank2>, Value> *> Map;
   Map t2map;
   typename std::map<Coordinate<rank2>, Value>::const_iterator i2;
@@ -202,6 +219,51 @@ public:
     c[3] = c4;
     Tensor<4, double>::Set(c, value);
   }
+  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4) const {
+    uint8_t c[4];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    c[3] = c4;
+    return Tensor<4, double>::Get(c);
+  }
+  gsl_matrix* GetGSLMatrix(uint8_t c1, uint8_t c2, uint8_t mrow, uint8_t mcol,
+      uint8_t mrow_size, uint8_t mcol_size) {
+    // c1 = value of first "unmatrixed" index
+    // c2 = value of second "unmatrixed" index
+    // mrow = index to be matrix row
+    // mcol = index to be matrix column
+    // mrow_size = number of rows
+    // mcol_size = number of columns
+    uint8_t c[2];
+    c[0] = c1;
+    c[1] = c2;
+    return Tensor<4, double>::GetGSLMatrix(c, mrow, mcol, mrow_size, mcol_size);
+  }
+};
+
+class DTensor5 : public Tensor<5, double> {
+public:
+  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
+      const double &value) {
+    uint8_t c[5];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    c[3] = c4;
+    c[4] = c5;
+    Tensor<5, double>::Set(c, value);
+  }
+  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4,
+      uint8_t c5) const {
+    uint8_t c[5];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    c[3] = c4;
+    c[4] = c5;
+    return Tensor<5, double>::Get(c);
+  }
 };
 
 class DTensor9 : public Tensor<9, double> {
@@ -221,17 +283,17 @@ public:
     Tensor<9, double>::Set(c, value);
   }
   const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
-        uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9) const {
-      uint8_t c[9];
-      c[0] = c1;
-      c[1] = c2;
-      c[2] = c3;
-      c[3] = c4;
-      c[4] = c5;
-      c[5] = c6;
-      c[6] = c7;
-      c[7] = c8;
-      c[8] = c9;
-      return Tensor<9, double>::Get(c);
-    }
+      uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9) const {
+    uint8_t c[9];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    c[3] = c4;
+    c[4] = c5;
+    c[5] = c6;
+    c[6] = c7;
+    c[7] = c8;
+    c[8] = c9;
+    return Tensor<9, double>::Get(c);
+  }
 };
