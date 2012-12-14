@@ -1,3 +1,3 @@
 CXXFLAGS=-g -Wall -Werror
 
-all: tensor
+all:: test trg-s3

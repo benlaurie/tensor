@@ -1,4 +1,5 @@
-#include <sys/types.h>
+#include <stdint.h>
+#include <string.h>
 
 #include <iostream>
 #include <map>
@@ -21,7 +22,7 @@ public:
   void Print(std::ostream &os) const {
     for (uint8_t r = 0; r < rank; ++r) {
       if (r != 0)
-	os << ", ";
+        os << ", ";
       os << (int)coords_[r];
     }
   }
@@ -61,10 +62,18 @@ public:
     Set(coord, value);
   }
   void Set(Coordinate<rank> coord, Value value) {
+    if (value == 0) {
+      elements_.erase(coord);
+      return;
+    }
     std::pair<typename std::map<Coordinate<rank>, Value>::iterator, bool> ret
-	= elements_.insert(EPair(coord, value));
+        = elements_.insert(EPair(coord, value));
     if (!ret.second)
       ret.first->second = value;
+  }
+  const Value &Get(uint8_t coords[rank]) const {
+    Coordinate<rank> coord(coords);
+    return Get(coord);
   }
   const Value &Get(Coordinate<rank> coord) const {
     typename std::map<Coordinate<rank>, Value>::const_iterator i = elements_.find(coord);
@@ -145,6 +154,25 @@ Contract2(const Tensor<rank1, Value> &t1, uint8_t d1,
   return result;
 };
 
+class DTensor1 : public Tensor<1, double> {
+public:
+  void Set(uint8_t c1, const double &value) {
+    uint8_t c[1];
+    c[0] = c1;
+    Tensor<1, double>::Set(c, value);
+  }
+};
+
+class DTensor2 : public Tensor<2, double> {
+public:
+  void Set(uint8_t c1, uint8_t c2, const double &value) {
+    uint8_t c[2];
+    c[0] = c1;
+    c[1] = c2;
+    Tensor<2, double>::Set(c, value);
+  }
+};
+
 class DTensor3 : public Tensor<3, double> {
 public:
   void Set(uint8_t c1, uint8_t c2, uint8_t c3, const double &value) {
@@ -154,32 +182,56 @@ public:
     c[2] = c3;
     Tensor<3, double>::Set(c, value);
   }
+  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3) const {
+    uint8_t c[3];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    return Tensor<3, double>::Get(c);
+  }
 };
 
-int main(int argc, char **argv) {
-  DTensor3 t1;
+class DTensor4 : public Tensor<4, double> {
+public:
+  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4,
+      const double &value) {
+    uint8_t c[4];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    c[3] = c4;
+    Tensor<4, double>::Set(c, value);
+  }
+};
 
-  t1.Set(1, 1, 2, 15);
-  t1.Set(1, 1, 2, 23.1);
-  t1.Set(1, 1, 3, 10);
-  t1.Set(100, 234, 123, 42);
-
-  Tensor<2, double> t2;
-  uint8_t c3[] = { 2, 1 };
-  t2.Set(c3, 1.5);
-  uint8_t c4[] = { 2, 2 };
-  t2.Set(c4, 2);
-  uint8_t c6[] = { 3, 1 };
-  t2.Set(c6, 2.5);
-
-  Tensor<4, double> t3;
-  t3 = Contract(t1, 2, t2, 0);
-
-  Tensor<3, double> t4;
-  t4 = Contract2(t1, 2, t2, 0);
-
-  std::cout << t1 << std::endl;
-  std::cout << t2 << std::endl;
-  std::cout << t3 << std::endl;
-  std::cout << t4 << std::endl;
-}
+class DTensor9 : public Tensor<9, double> {
+public:
+  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
+      uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9, const double &value) {
+    uint8_t c[9];
+    c[0] = c1;
+    c[1] = c2;
+    c[2] = c3;
+    c[3] = c4;
+    c[4] = c5;
+    c[5] = c6;
+    c[6] = c7;
+    c[7] = c8;
+    c[8] = c9;
+    Tensor<9, double>::Set(c, value);
+  }
+  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
+        uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9) const {
+      uint8_t c[9];
+      c[0] = c1;
+      c[1] = c2;
+      c[2] = c3;
+      c[3] = c4;
+      c[4] = c5;
+      c[5] = c6;
+      c[6] = c7;
+      c[7] = c8;
+      c[8] = c9;
+      return Tensor<9, double>::Get(c);
+    }
+};
