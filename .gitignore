@@ -4,3 +4,6 @@
 auto_tensor.h
 test
 trg-s3
+.cproject
+.project
+.pydevproject

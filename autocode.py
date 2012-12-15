@@ -44,5 +44,5 @@ def DTensor(rank):
     print '};'
     print
 
-for n in range(1, 15):
+for n in range(1, 26):
     DTensor(n)

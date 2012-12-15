@@ -206,6 +206,49 @@ void DoFirstSVD(DTensor5 result[2], DTensor4 *B, uint8_t dc, double condi) {
   }
 }
 
+void DoFirstContraction(DTensor14 *C, const DTensor9 &K, const DTensor5 &SU,
+    const DTensor5 &SV) {
+  DTensor9 SUSU;
+  Contract(&SUSU, SU, 3, SU, 4);
+  DTensor17 KSUSU;
+  Contract(&KSUSU, K, 1, SUSU, 1);
+  DTensor16 KSUSU1;
+  ContractSelf(&KSUSU1, KSUSU, 2, 14);
+  DTensor15 KSUSU2;
+  ContractSelf(&KSUSU2, KSUSU1, 5, 12);
+  DTensor14 KSUSU3;
+  ContractSelf(&KSUSU3, KSUSU2, 6, 11);
+  DTensor13 KSUSU4;
+  ContractSelf(&KSUSU4, KSUSU3, 7, 13);
+  DTensor9 SVSV;
+  Contract(&SVSV, SV, 4, SV, 3);
+  DTensor17 KSVSV;
+  Contract(&KSVSV, K, 0, SVSV, 2);
+  DTensor16 KSVSV1;
+  ContractSelf(&KSVSV1, KSVSV, 3, 15);
+  DTensor15 KSVSV2;
+  ContractSelf(&KSVSV2, KSVSV1, 4, 12);
+  DTensor14 KSVSV3;
+  ContractSelf(&KSVSV3, KSVSV2, 5, 11);
+  DTensor13 KSVSV4;
+  ContractSelf(&KSVSV4, KSVSV3, 7, 13);
+  DTensor25 KKSUSUSVSV;
+  Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 10);
+  DTensor24 KKSUSUSVSV1;
+  ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 24);
+  DTensor22 KKSUSUSVSV2;
+  ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 17);
+  DTensor20 KKSUSUSVSV3;
+  ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 16);
+  DTensor18 KKSUSUSVSV4;
+  ContractSelf2(&KKSUSUSVSV4, KKSUSUSVSV3, 4, 15);
+  DTensor16 KKSUSUSVSV5;
+  ContractSelf2(&KKSUSUSVSV5, KKSUSUSVSV4, 4, 14);
+  DTensor15 KKSUSUSVSV6;
+  ContractSelf(&KKSUSUSVSV6, KKSUSUSVSV5, 6, 10);
+  ContractSelf(C, KKSUSUSVSV6, 8, 10);
+}
+
 void TRGS3(double a, double b, double c, uint8_t dc, double condi,
     uint8_t iter) {
   DTensor9 K;
@@ -220,6 +263,9 @@ void TRGS3(double a, double b, double c, uint8_t dc, double condi,
   DTensor5 SV = SVD[1];
   std::cout << SU << std::endl;
   std::cout << SV << std::endl;
+  DTensor14 C;
+  DoFirstContraction(&C, K, SU, SV);
+  std::cout << C << std::endl;
 }
 
 int main(int argc, char **argv) {
