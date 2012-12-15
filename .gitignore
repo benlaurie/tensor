@@ -1,0 +1,6 @@
+*~
+.depend
+*.o
+auto_tensor.h
+test
+trg-s3
