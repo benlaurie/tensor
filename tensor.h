@@ -46,6 +46,18 @@ public:
     return result;
   }
 
+  const Coordinate<rank - 2> except2(uint8_t d1, uint8_t d2) const {
+    Coordinate<rank - 2> result;
+    for (uint8_t r = 0; r < rank; ++r)
+      if (r < d1 && r < d2)
+        result.Set(r, coords_[r]);
+      else if ((r > d1 && r < d2) || (r < d1 && r > d2))
+        result.Set(r - 1, coords_[r]);
+      else if (r > d1 && r > d2)
+        result.Set(r - 2, coords_[r]);
+    return result;
+  }
+
 private:
   uint8_t coords_[rank];
 };
@@ -174,7 +186,59 @@ void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
       }
     }
   }
-};
+}
+
+template <uint8_t rank, class Value>
+void ContractSelf(Tensor<rank - 1, Value> *t_out,
+              const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
+  typedef std::multimap<uint8_t,
+      const std::pair<const Coordinate<rank>, Value> *> Map;
+  Map t_in_map;
+  typename std::map<Coordinate<rank>, Value>::const_iterator i2;
+  for (i2 = t_in.elements().begin(); i2 != t_in.elements().end(); ++i2)
+    t_in_map.insert(std::pair<uint8_t, const std::pair<const Coordinate<rank>,
+                 Value> *>(i2->first.coord(d2), &*i2));
+
+  typename std::map<Coordinate<rank>, Value>::const_iterator i1;
+  for (i1 = t_in.elements().begin(); i1 != t_in.elements().end(); ++i1) {
+    uint8_t r = i1->first.coord(d1);
+    std::pair<typename Map::const_iterator,
+        typename Map::const_iterator> r2 = t_in_map.equal_range(r);
+    for (typename Map::const_iterator i2 = r2.first; i2 != r2.second; ++i2) {
+      Coordinate<rank - 1> new_coord;
+      new_coord.Set(0, i1->first.except(d2));
+      t_out->Set(new_coord, i1->second * i2->second->second);
+    }
+  }
+}
+
+template <uint8_t rank, class Value>
+void ContractSelf2(Tensor<rank - 2, Value> *t_out,
+               const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
+  typedef std::multimap<uint8_t,
+      const std::pair<const Coordinate<rank>, Value> *> Map;
+  Map t_in_map;
+  typename std::map<Coordinate<rank>, Value>::const_iterator i2;
+  for (i2 = t_in.elements().begin(); i2 != t_in.elements().end(); ++i2)
+    t_in_map.insert(std::pair<uint8_t,
+        const std::pair<const Coordinate<rank>, Value> *>(i2->first.coord(d2),
+                                                           &*i2));
+
+  typename std::map<Coordinate<rank>, Value>::const_iterator i1;
+  for (i1 = t_in.elements().begin(); i1 != t_in.elements().end(); ++i1) {
+    uint8_t r = i1->first.coord(d1);
+    std::pair<typename Map::const_iterator, typename Map::const_iterator> r2
+        = t_in_map.equal_range(r);
+    if (r2.first != r2.second) {
+      for (typename Map::const_iterator i2 = r2.first; i2 != r2.second; ++i2) {
+        Coordinate<rank - 2> new_coord;
+        new_coord.Set(0, i1->first.except2(d1, d2));
+        t_out->Set(new_coord, t_out->Get(new_coord)
+                   + i1->second * i2->second->second);
+      }
+    }
+  }
+}
 
 #if 0
 class DTensor1 : public Tensor<1, double> {
