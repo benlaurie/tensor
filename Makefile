@@ -2,6 +2,8 @@ CXXFLAGS=-g -Wall -Werror
 
 all:: .depend test trg-s3
 
+include .depend
+
 .depend: *.cc *.h
 	$(CXX) $(CXXFLAGS) -MM -MG *.cc > .depend
 
