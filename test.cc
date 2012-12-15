@@ -19,16 +19,16 @@ int main(int argc, char **argv) {
   t2.Set(c6, 2.5);
 
   Tensor<4, double> t3;
-  t3 = Contract(t1, 2, t2, 0);
+  Contract(&t3, t1, 2, t2, 0);
 
   Tensor<3, double> t4;
-  t4 = Contract2(t1, 2, t2, 0);
+  Contract2(&t4, t1, 2, t2, 0);
 
   DTensor1 t5;
   t5.Set(1,34);
 
   Tensor<0, double> t6;
-  t6 = Contract2(t5, 1, t5, 1);
+  Contract2(&t6, t5, 1, t5, 1);
 
   std::cout << t1 << std::endl;
   std::cout << t2 << std::endl;
