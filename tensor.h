@@ -57,11 +57,11 @@ template <uint8_t rank, class Value> class Tensor {
 public:
   typedef std::pair<Coordinate<rank>, Value> EPair;
 
-  void Set(uint8_t coords[rank], Value value) {
+  void Set(uint8_t coords[rank], const Value &value) {
     Coordinate<rank> coord(coords);
     Set(coord, value);
   }
-  void Set(Coordinate<rank> coord, Value value) {
+  void Set(Coordinate<rank> coord, const Value &value) {
     if (value == 0) {
       elements_.erase(coord);
       return;
@@ -92,7 +92,7 @@ public:
   }
   const std::map<Coordinate<rank>, Value> &elements() const { return elements_; }
   gsl_matrix* GetGSLMatrix(uint8_t coords[rank - 2], uint8_t mrow, uint8_t mcol,
-      uint8_t mrow_size, uint8_t mcol_size) {
+      uint8_t mrow_size, uint8_t mcol_size) const {
     gsl_matrix *M = gsl_matrix_calloc(mrow_size, mrow_size);
     uint8_t full_coords[rank];
     uint8_t d = 0;
@@ -119,18 +119,22 @@ template <uint8_t rank, class Value> std::ostream &operator<<(std::ostream &out,
 }
 
 template <uint8_t rank1, uint8_t rank2, class Value>
-void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out, const Tensor<rank1, Value> &t1, uint8_t d1,
-    const Tensor<rank2, Value> &t2, uint8_t d2) {
-  typedef std::multimap<uint8_t, const std::pair<const Coordinate<rank2>, Value> *> Map;
+void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
+	      const Tensor<rank1, Value> &t1, uint8_t d1,
+	      const Tensor<rank2, Value> &t2, uint8_t d2) {
+  typedef std::multimap<uint8_t,
+      const std::pair<const Coordinate<rank2>, Value> *> Map;
   Map t2map;
   typename std::map<Coordinate<rank2>, Value>::const_iterator i2;
   for (i2 = t2.elements().begin(); i2 != t2.elements().end(); ++i2)
-    t2map.insert(std::pair<uint8_t, const std::pair<const Coordinate<rank2>, Value> *>(i2->first.coord(d2), &*i2));
+    t2map.insert(std::pair<uint8_t, const std::pair<const Coordinate<rank2>,
+		 Value> *>(i2->first.coord(d2), &*i2));
 
   typename std::map<Coordinate<rank1>, Value>::const_iterator i1;
   for (i1 = t1.elements().begin(); i1 != t1.elements().end(); ++i1) {
     uint8_t r = i1->first.coord(d1);
-    std::pair<typename Map::const_iterator, typename Map::const_iterator> r2 = t2map.equal_range(r);
+    std::pair<typename Map::const_iterator,
+	typename Map::const_iterator> r2 = t2map.equal_range(r);
     for (typename Map::const_iterator i2 = r2.first; i2 != r2.second; ++i2) {
       Coordinate<rank1 + rank2 - 1> new_coord;
       new_coord.Set(0, i1->first);
@@ -141,18 +145,23 @@ void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out, const Tensor<rank1, Value
 }
 
 template <uint8_t rank1, uint8_t rank2, class Value>
-void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out, const Tensor<rank1, Value> &t1, uint8_t d1,
-	  const Tensor<rank2, Value> &t2, uint8_t d2) {
-  typedef std::multimap<uint8_t, const std::pair<const Coordinate<rank2>, Value> *> Map;
+void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
+	       const Tensor<rank1, Value> &t1, uint8_t d1,
+	       const Tensor<rank2, Value> &t2, uint8_t d2) {
+  typedef std::multimap<uint8_t,
+      const std::pair<const Coordinate<rank2>, Value> *> Map;
   Map t2map;
   typename std::map<Coordinate<rank2>, Value>::const_iterator i2;
   for (i2 = t2.elements().begin(); i2 != t2.elements().end(); ++i2)
-    t2map.insert(std::pair<uint8_t, const std::pair<const Coordinate<rank2>, Value> *>(i2->first.coord(d2), &*i2));
+    t2map.insert(std::pair<uint8_t,
+        const std::pair<const Coordinate<rank2>, Value> *>(i2->first.coord(d2),
+							   &*i2));
 
   typename std::map<Coordinate<rank1>, Value>::const_iterator i1;
   for (i1 = t1.elements().begin(); i1 != t1.elements().end(); ++i1) {
     uint8_t r = i1->first.coord(d1);
-    std::pair<typename Map::const_iterator, typename Map::const_iterator> r2 = t2map.equal_range(r);
+    std::pair<typename Map::const_iterator, typename Map::const_iterator> r2
+	= t2map.equal_range(r);
     if (r2.first != r2.second) {
       for (typename Map::const_iterator i2 = r2.first; i2 != r2.second; ++i2) {
 	Coordinate<rank1 + rank2 - 2> new_coord;
