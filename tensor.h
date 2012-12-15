@@ -1,3 +1,5 @@
+/* -*- mode: c++; indent-tabs-mode: nil -*- */
+
 #include <stdint.h>
 #include <string.h>
 #include <gsl/gsl_matrix.h>
@@ -14,9 +16,9 @@ public:
   bool operator<(const Coordinate &other) const {
     for (uint8_t d = 0; d < rank; ++d)
       if (coords_[d] < other.coords_[d])
-	return true;
+        return true;
       else if (coords_[d] > other.coords_[d])
-	return false;
+        return false;
     return false;
   }
   void Print(std::ostream &os) const {
@@ -38,9 +40,9 @@ public:
     Coordinate<rank - 1> result;
     for (uint8_t r = 0; r < rank; ++r)
       if (r < d)
-	result.Set(r, coords_[r]);
+        result.Set(r, coords_[r]);
       else if (r > d)
-	result.Set(r - 1, coords_[r]);
+        result.Set(r - 1, coords_[r]);
     return result;
   }
 
@@ -86,7 +88,7 @@ public:
   void Print(std::ostream &os) const {
     typename std::map<Coordinate<rank>, Value>::const_iterator i;
     for (i = elements_.begin();
-	 i != elements_.end(); ++i) {
+         i != elements_.end(); ++i) {
       os << '[' << i->first << ": " << i->second << ']';
     }
   }
@@ -120,21 +122,21 @@ template <uint8_t rank, class Value> std::ostream &operator<<(std::ostream &out,
 
 template <uint8_t rank1, uint8_t rank2, class Value>
 void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
-	      const Tensor<rank1, Value> &t1, uint8_t d1,
-	      const Tensor<rank2, Value> &t2, uint8_t d2) {
+              const Tensor<rank1, Value> &t1, uint8_t d1,
+              const Tensor<rank2, Value> &t2, uint8_t d2) {
   typedef std::multimap<uint8_t,
       const std::pair<const Coordinate<rank2>, Value> *> Map;
   Map t2map;
   typename std::map<Coordinate<rank2>, Value>::const_iterator i2;
   for (i2 = t2.elements().begin(); i2 != t2.elements().end(); ++i2)
     t2map.insert(std::pair<uint8_t, const std::pair<const Coordinate<rank2>,
-		 Value> *>(i2->first.coord(d2), &*i2));
+                 Value> *>(i2->first.coord(d2), &*i2));
 
   typename std::map<Coordinate<rank1>, Value>::const_iterator i1;
   for (i1 = t1.elements().begin(); i1 != t1.elements().end(); ++i1) {
     uint8_t r = i1->first.coord(d1);
     std::pair<typename Map::const_iterator,
-	typename Map::const_iterator> r2 = t2map.equal_range(r);
+        typename Map::const_iterator> r2 = t2map.equal_range(r);
     for (typename Map::const_iterator i2 = r2.first; i2 != r2.second; ++i2) {
       Coordinate<rank1 + rank2 - 1> new_coord;
       new_coord.Set(0, i1->first);
@@ -146,8 +148,8 @@ void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
 
 template <uint8_t rank1, uint8_t rank2, class Value>
 void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
-	       const Tensor<rank1, Value> &t1, uint8_t d1,
-	       const Tensor<rank2, Value> &t2, uint8_t d2) {
+               const Tensor<rank1, Value> &t1, uint8_t d1,
+               const Tensor<rank2, Value> &t2, uint8_t d2) {
   typedef std::multimap<uint8_t,
       const std::pair<const Coordinate<rank2>, Value> *> Map;
   Map t2map;
@@ -155,20 +157,20 @@ void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
   for (i2 = t2.elements().begin(); i2 != t2.elements().end(); ++i2)
     t2map.insert(std::pair<uint8_t,
         const std::pair<const Coordinate<rank2>, Value> *>(i2->first.coord(d2),
-							   &*i2));
+                                                           &*i2));
 
   typename std::map<Coordinate<rank1>, Value>::const_iterator i1;
   for (i1 = t1.elements().begin(); i1 != t1.elements().end(); ++i1) {
     uint8_t r = i1->first.coord(d1);
     std::pair<typename Map::const_iterator, typename Map::const_iterator> r2
-	= t2map.equal_range(r);
+        = t2map.equal_range(r);
     if (r2.first != r2.second) {
       for (typename Map::const_iterator i2 = r2.first; i2 != r2.second; ++i2) {
-	Coordinate<rank1 + rank2 - 2> new_coord;
-	new_coord.Set(0, i1->first.except(d1));
-	new_coord.Set(rank1 - 1, i2->second->first.except(d2));
-	t_out->Set(new_coord, t_out->Get(new_coord)
-		   + i1->second * i2->second->second);
+        Coordinate<rank1 + rank2 - 2> new_coord;
+        new_coord.Set(0, i1->first.except(d1));
+        new_coord.Set(rank1 - 1, i2->second->first.except(d2));
+        t_out->Set(new_coord, t_out->Get(new_coord)
+                   + i1->second * i2->second->second);
       }
     }
   }

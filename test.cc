@@ -1,3 +1,5 @@
+/* -*- indent-tabs-mode: nil -*- */
+
 #include <stdint.h>
 
 #include "tensor.h"
