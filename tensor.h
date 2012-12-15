@@ -176,6 +176,7 @@ void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
   }
 };
 
+#if 0
 class DTensor1 : public Tensor<1, double> {
 public:
   void Set(uint8_t c1, const double &value) {
@@ -346,3 +347,6 @@ public:
     return Tensor<14, double>::Get(c);
   }
 };
+#endif
+#include "auto_tensor.h"
+
