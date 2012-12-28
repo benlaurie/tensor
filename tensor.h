@@ -211,7 +211,7 @@ void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
 }
 
 template <rank_t rank, class Value>
-void ContractSelf(Tensor<rank - 1, Value> *t_out,
+void ContractSelfOld(Tensor<rank - 1, Value> *t_out,
               const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
   typedef std::multimap<uint8_t,
       const std::pair<const Coordinate<rank>, Value> *> Map;
@@ -232,6 +232,20 @@ void ContractSelf(Tensor<rank - 1, Value> *t_out,
       t_out->Set(new_coord, i1->second * i2->second->second);
     }
     std::cout << i1->first << std::endl;
+  }
+}
+
+template <rank_t rank, class Value>
+void ContractSelf(Tensor<rank - 1, Value> *t_out,
+              const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
+  typename std::map<Coordinate<rank>, Value>::const_iterator i1;
+  for (i1 = t_in.elements().begin(); i1 != t_in.elements().end(); ++i1) {
+    if (i1->first.coord(d1) == i1->first.coord(d2)) {
+      Coordinate<rank - 1> new_coord;
+      new_coord.Set(0, i1->first.except(d2));
+      t_out->Set(new_coord, t_out->Get(new_coord) + i1->second);
+      std::cout << i1->first << std::endl;
+    }
   }
 }
 
