@@ -205,9 +205,7 @@ void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
                    + i1->second * i2->second->second);
       }
     }
-    std::cout << i1->first << std::endl;
   }
-  std::cout << '2' << std::endl;
 }
 
 template <rank_t rank, class Value>
@@ -231,7 +229,6 @@ void ContractSelfOld(Tensor<rank - 1, Value> *t_out,
       new_coord.Set(0, i1->first.except(d2));
       t_out->Set(new_coord, i1->second * i2->second->second);
     }
-    std::cout << i1->first << std::endl;
   }
 }
 
@@ -244,7 +241,6 @@ void ContractSelf(Tensor<rank - 1, Value> *t_out,
       Coordinate<rank - 1> new_coord;
       new_coord.Set(0, i1->first.except(d2));
       t_out->Set(new_coord, t_out->Get(new_coord) + i1->second);
-      std::cout << i1->first << std::endl;
     }
   }
 }
@@ -273,7 +269,6 @@ void ContractSelf2old(Tensor<rank - 2, Value> *t_out,
         t_out->Set(new_coord, t_out->Get(new_coord)
                    + i1->second * i2->second->second);
       }
-      std::cout << (int)r << '.' << std::flush;
     }
   }
 }
