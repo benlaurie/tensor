@@ -1,5 +1,7 @@
 /* -*- mode: c++; indent-tabs-mode: nil -*- */
 
+#include <assert.h>
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 #include <gsl/gsl_matrix.h>
@@ -7,14 +9,19 @@
 #include <iostream>
 #include <map>
 
-template <uint8_t rank> class Coordinate {
+// Should be unsigned but causes warning "comparison is always false
+// due to limited range of data" when rank 0 is used with some
+// compilers.
+typedef int8_t rank_t;
+
+template <rank_t rank> class Coordinate {
 public:
   explicit Coordinate(const uint8_t coords[rank]) {
     memcpy(coords_, coords, sizeof coords_);
   }
   Coordinate() {}
   bool operator<(const Coordinate &other) const {
-    for (uint8_t d = 0; d < rank; ++d)
+    for (rank_t d = 0; d < rank; ++d)
       if (coords_[d] < other.coords_[d])
         return true;
       else if (coords_[d] > other.coords_[d])
@@ -22,21 +29,28 @@ public:
     return false;
   }
   void Print(std::ostream &os) const {
-    for (uint8_t r = 0; r < rank; ++r) {
+    for (rank_t r = 0; r < rank; ++r) {
       if (r != 0)
         os << ", ";
       os << (int)coords_[r];
     }
   }
-  template <uint8_t rank2> void Set(uint8_t offset, Coordinate<rank2> coords) {
-    for (uint8_t r = 0; r < rank2; ++r)
+  template <rank_t rank2> void Set(rank_t offset, Coordinate<rank2> coords) {
+    assert(rank2 + offset <= rank);
+    for (rank_t r = 0; r < rank2; ++r)
       coords_[r + offset] = coords.coord(r);
   }
-  void Set(uint8_t r, uint8_t coord) { coords_[r] = coord; }
+  void Set(rank_t r, uint8_t coord) {
+    assert(r < rank);
+    coords_[r] = coord;
+  }
       
-  const uint8_t coord(uint8_t r) const { return coords_[r]; }
+  const uint8_t coord(rank_t r) const {
+    assert(r < rank);
+    return coords_[r];
+  }
 
-  const Coordinate<rank - 1> except(uint8_t d) const {
+  const Coordinate<rank - 1> except(rank_t d) const {
     Coordinate<rank - 1> result;
     for (uint8_t r = 0; r < rank; ++r)
       if (r < d)
@@ -46,9 +60,9 @@ public:
     return result;
   }
 
-  const Coordinate<rank - 2> except2(uint8_t d1, uint8_t d2) const {
+  const Coordinate<rank - 2> except2(rank_t d1, uint8_t d2) const {
     Coordinate<rank - 2> result;
-    for (uint8_t r = 0; r < rank; ++r)
+    for (rank_t r = 0; r < rank; ++r)
       if (r < d1 && r < d2)
         result.Set(r, coords_[r]);
       else if ((r > d1 && r < d2) || (r < d1 && r > d2))
@@ -62,20 +76,27 @@ private:
   uint8_t coords_[rank];
 };
 
-template <uint8_t rank> std::ostream &operator<<(std::ostream &out, const Coordinate<rank> coord) {
+template <rank_t rank> std::ostream &operator<<(std::ostream &out, const Coordinate<rank> &coord) {
   coord.Print(out);
   return out;
 } 
 
-template <uint8_t rank, class Value> class Tensor {
+template <rank_t rank, class Value> class Tensor {
 public:
   typedef std::pair<Coordinate<rank>, Value> EPair;
+
+  Tensor() {}
+  // leave undefined
+  Tensor(const Tensor &from);
+  Tensor &operator=(const Tensor &rhs);
 
   void Set(uint8_t coords[rank], const Value &value) {
     Coordinate<rank> coord(coords);
     Set(coord, value);
   }
   void Set(Coordinate<rank> coord, const Value &value) {
+    assert(!isinf(value));
+    assert(!isnan(value));
     if (value == 0) {
       elements_.erase(coord);
       return;
@@ -99,8 +120,7 @@ public:
   }
   void Print(std::ostream &os) const {
     typename std::map<Coordinate<rank>, Value>::const_iterator i;
-    for (i = elements_.begin();
-         i != elements_.end(); ++i) {
+    for (i = elements_.begin(); i != elements_.end(); ++i) {
       os << '[' << i->first << ": " << i->second << ']';
     }
   }
@@ -127,12 +147,12 @@ private:
   std::map<Coordinate<rank>, Value> elements_;
 };
 
-template <uint8_t rank, class Value> std::ostream &operator<<(std::ostream &out, const Tensor<rank, Value> tensor) {
+template <rank_t rank, class Value> std::ostream &operator<<(std::ostream &out, const Tensor<rank, Value> &tensor) {
   tensor.Print(out);
   return out;
 }
 
-template <uint8_t rank1, uint8_t rank2, class Value>
+template <rank_t rank1, rank_t rank2, class Value>
 void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
               const Tensor<rank1, Value> &t1, uint8_t d1,
               const Tensor<rank2, Value> &t2, uint8_t d2) {
@@ -158,7 +178,7 @@ void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
   }
 }
 
-template <uint8_t rank1, uint8_t rank2, class Value>
+template <rank_t rank1, rank_t rank2, class Value>
 void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
                const Tensor<rank1, Value> &t1, uint8_t d1,
                const Tensor<rank2, Value> &t2, uint8_t d2) {
@@ -185,10 +205,12 @@ void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
                    + i1->second * i2->second->second);
       }
     }
+    std::cout << i1->first << std::endl;
   }
+  std::cout << '2' << std::endl;
 }
 
-template <uint8_t rank, class Value>
+template <rank_t rank, class Value>
 void ContractSelf(Tensor<rank - 1, Value> *t_out,
               const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
   typedef std::multimap<uint8_t,
@@ -209,11 +231,12 @@ void ContractSelf(Tensor<rank - 1, Value> *t_out,
       new_coord.Set(0, i1->first.except(d2));
       t_out->Set(new_coord, i1->second * i2->second->second);
     }
+    std::cout << i1->first << std::endl;
   }
 }
 
-template <uint8_t rank, class Value>
-void ContractSelf2(Tensor<rank - 2, Value> *t_out,
+template <rank_t rank, class Value>
+void ContractSelf2old(Tensor<rank - 2, Value> *t_out,
                const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
   typedef std::multimap<uint8_t,
       const std::pair<const Coordinate<rank>, Value> *> Map;
@@ -236,6 +259,20 @@ void ContractSelf2(Tensor<rank - 2, Value> *t_out,
         t_out->Set(new_coord, t_out->Get(new_coord)
                    + i1->second * i2->second->second);
       }
+      std::cout << (int)r << '.' << std::flush;
+    }
+  }
+}
+
+template <rank_t rank, class Value>
+void ContractSelf2(Tensor<rank - 2, Value> *t_out,
+               const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
+  typename std::map<Coordinate<rank>, Value>::const_iterator i1;
+  for (i1 = t_in.elements().begin(); i1 != t_in.elements().end(); ++i1) {
+    if (i1->first.coord(d1) == i1->first.coord(d2)) {
+        Coordinate<rank - 2> new_coord;
+        new_coord.Set(0, i1->first.except2(d1, d2));
+        t_out->Set(new_coord, t_out->Get(new_coord) + i1->second);
     }
   }
 }

@@ -259,8 +259,8 @@ void TRGS3(double a, double b, double c, uint8_t dc, double condi,
   std::cout << B << std::endl;
   DTensor5 SVD[2];
   DoFirstSVD(SVD, &B, dc, condi);
-  DTensor5 SU = SVD[0];
-  DTensor5 SV = SVD[1];
+  DTensor5 &SU = SVD[0];
+  DTensor5 &SV = SVD[1];
   std::cout << SU << std::endl;
   std::cout << SV << std::endl;
   DTensor14 C;

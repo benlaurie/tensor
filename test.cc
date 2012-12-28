@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
   t5.Set(1,34);
 
   Tensor<0, double> t6;
-  Contract2(&t6, t5, 1, t5, 1);
+  Contract2(&t6, t5, 0, t5, 0);
 
   DTensor3 t7;
   ContractSelf(&t7, t3, 0, 1);
