@@ -72,6 +72,10 @@ public:
     return result;
   }
 
+  bool operator==(const Coordinate &rhs) const {
+    return memcmp(coords_, rhs.coords_, sizeof coords_) == 0;
+  }
+
 private:
   uint8_t coords_[rank];
 };
@@ -86,9 +90,14 @@ public:
   typedef std::pair<Coordinate<rank>, Value> EPair;
 
   Tensor() {}
+
   // leave undefined
   Tensor(const Tensor &from);
   Tensor &operator=(const Tensor &rhs);
+
+  bool operator==(const Tensor &rhs) const {
+    return elements_ == rhs.elements_;
+  }
 
   void Set(uint8_t coords[rank], const Value &value) {
     Coordinate<rank> coord(coords);
@@ -150,6 +159,22 @@ private:
 template <rank_t rank, class Value> std::ostream &operator<<(std::ostream &out, const Tensor<rank, Value> &tensor) {
   tensor.Print(out);
   return out;
+}
+
+template <rank_t rank1, rank_t rank2, class Value>
+void Multiply(Tensor<rank1 + rank2, Value> *t_out,
+              const Tensor<rank1, Value> &t1,
+              const Tensor<rank2, Value> &t2) {
+  typename std::map<Coordinate<rank1>, Value>::const_iterator i1;
+  for (i1 = t1.elements().begin(); i1 != t1.elements().end(); ++i1) {
+    typename std::map<Coordinate<rank2>, Value>::const_iterator i2;
+    for (i2 = t2.elements().begin(); i2 != t2.elements().end(); ++i2) {
+      Coordinate<rank1 + rank2> new_coord;
+      new_coord.Set(0, i1->first);
+      new_coord.Set(rank1, i2->first);
+      t_out->Set(new_coord, i1->second * i2->second);
+    }
+  }
 }
 
 template <rank_t rank1, rank_t rank2, class Value>
@@ -240,7 +265,7 @@ void ContractSelf(Tensor<rank - 1, Value> *t_out,
     if (i1->first.coord(d1) == i1->first.coord(d2)) {
       Coordinate<rank - 1> new_coord;
       new_coord.Set(0, i1->first.except(d2));
-      t_out->Set(new_coord, t_out->Get(new_coord) + i1->second);
+      t_out->Set(new_coord, i1->second);
     }
   }
 }

@@ -4,6 +4,45 @@
 
 #include "tensor.h"
 
+int RandomInt(unsigned range) {
+  return random() % range;
+}
+
+double RandomDouble(double range) {
+  return range * ((double)random())/(1U << 31);
+}
+
+template <rank_t rank> void RandomFill(Tensor<rank, double> *t, unsigned range,
+                                       unsigned entries) {
+  Coordinate<rank> coord;
+
+  while (entries--) {
+    for (rank_t n = 0; n < rank; ++n)
+      coord.Set(n, RandomInt(range));
+    t->Set(coord, RandomDouble(2) - 1);
+  }
+}
+
+void TestContract() {
+  DTensor3 t1;
+
+  RandomFill(&t1, 3, 10);
+  std::cout << t1 << std::endl;
+
+  DTensor4 t2;
+  Contract2(&t2, t1, 0, t1, 1);
+  std::cout << t2 << std::endl;
+
+  DTensor6 t3;
+  Multiply(&t3, t1, t1);
+
+  DTensor4 t4;
+  ContractSelf2(&t4, t3, 0, 4);
+  std::cout << t4 << std::endl;
+
+  assert(t2 == t4);
+}
+
 int main(int argc, char **argv) {
   DTensor3 t1;
 
@@ -54,4 +93,7 @@ int main(int argc, char **argv) {
   std::cout << t8 << std::endl;
   std::cout << t9 << std::endl;
   std::cout << t10 << std::endl;
+
+  srandomdev();
+  TestContract();
 }
