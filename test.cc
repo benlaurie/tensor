@@ -41,6 +41,14 @@ void TestContract() {
   std::cout << t4 << std::endl;
 
   assert(t2 == t4);
+
+  DTensor5 t5;
+  Contract(&t5, t1, 2, t1, 0);
+
+  DTensor5 t6;
+  ContractSelf(&t6, t3, 2, 3);
+
+  assert(t5 == t6);
 }
 
 int main(int argc, char **argv) {
