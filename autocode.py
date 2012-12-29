@@ -27,8 +27,8 @@ def DTensor(rank):
     print '    return Tensor<' + str(rank) + ', double>::Get(c);'
     print '  }'
 
-    print '  gsl_matrix *GetGSLMatrix(uint8_t c1, uint8_t c2, uint8_t mrow, uint8_t mcol,'
-    print '      uint8_t mrow_size, uint8_t mcol_size) {'
+    print '  gsl_matrix *GetGSLMatrix(rank_t c1, rank_t c2, rank_t mrow, rank_t mcol,'
+    print '      rank_t mrow_size, rank_t mcol_size) {'
     print '    // c1 = value of first "unmatrixed" index'
     print '    // c2 = value of second "unmatrixed" index'
     print '    // mrow = index to be matrix row'
