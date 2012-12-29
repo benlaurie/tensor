@@ -33,16 +33,10 @@ int main(int argc, char **argv) {
   Contract2(&t6, t5, 1, t5, 1);
 
   DTensor3 t7;
-  ContractSelf(&t7, t3, 0, 1);
+  ContractSelf(&t7, t3, 2, 3);
 
   DTensor2 t8;
-  ContractSelf2(&t8, t3, 0, 1);
-
-  DTensor2 t9;
-  ContractSelf2(&t9, t3, 1, 0);
-
-  DTensor3 t10;
-  ContractSelf(&t10, t3, 1, 0);
+  ContractSelf2(&t8, t3, 0, 3);
 
   std::cout << t1 << std::endl;
   std::cout << t2 << std::endl;
@@ -52,6 +46,4 @@ int main(int argc, char **argv) {
   std::cout << t6 << std::endl;
   std::cout << t7 << std::endl;
   std::cout << t8 << std::endl;
-  std::cout << t9 << std::endl;
-  std::cout << t10 << std::endl;
 }
