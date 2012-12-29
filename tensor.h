@@ -19,7 +19,10 @@ public:
   explicit Coordinate(const uint8_t coords[rank]) {
     memcpy(coords_, coords, sizeof coords_);
   }
-  Coordinate() {}
+  Coordinate() {
+    for (rank_t d = 0; d < rank; ++d)
+      coords_[d] = 0xff;
+  }
   bool operator<(const Coordinate &other) const {
     for (rank_t d = 0; d < rank; ++d)
       if (coords_[d] < other.coords_[d])
@@ -42,6 +45,7 @@ public:
   }
   void Set(rank_t r, uint8_t coord) {
     assert(r < rank);
+    assert(r > -1);
     coords_[r] = coord;
   }
       

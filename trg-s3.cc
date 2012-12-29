@@ -208,44 +208,45 @@ void DoFirstSVD(DTensor5 result[2], DTensor4 *B, uint8_t dc, double condi) {
 
 void DoFirstContraction(DTensor14 *C, const DTensor9 &K, const DTensor5 &SU,
     const DTensor5 &SV) {
-  DTensor9 SUSU;
+  DTensor9 SUSU; // U0, U1, U2, U3+U4, U4, U0, U1, U2, U3
   Contract(&SUSU, SU, 3, SU, 4);
-  DTensor17 KSUSU;
+  DTensor17 KSUSU; // K0, K1+U1, K2, K3, K4, K5, K6, K7, K8, U0, U2, U3+U4, U4, U0, U1, U2, U3
   Contract(&KSUSU, K, 1, SUSU, 1);
-  DTensor16 KSUSU1;
+  DTensor16 KSUSU1;  // K0, K1+U1, K2+U1, K3, K4, K5, K6, K7, K8, U0, U2, U3+U4, U4, U0, U2, U3
   ContractSelf(&KSUSU1, KSUSU, 2, 14);
-  DTensor15 KSUSU2;
+  DTensor15 KSUSU2;  // K0, K1+U1, K2+U1, K3, K4, K5+U4, K6, K7, K8, U0, U2, U3+U4, U0, U2, U3
   ContractSelf(&KSUSU2, KSUSU1, 5, 12);
-  DTensor14 KSUSU3;
+  DTensor14 KSUSU3;  // K0, K1+U1, K2+U1, K3, K4, K5+U4, K6+U3+U4, K7, K8, U0, U2, U0, U2, U3
   ContractSelf(&KSUSU3, KSUSU2, 6, 11);
-  DTensor13 KSUSU4;
+  DTensor13 KSUSU4;  // K0, K1+U1, K2+U1, K3, K4, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2
   ContractSelf(&KSUSU4, KSUSU3, 7, 13);
-  DTensor9 SVSV;
+  DTensor9 SVSV;  // V0, V1, V2, V3, V4+V3, V0, V1, V2, V4
   Contract(&SVSV, SV, 4, SV, 3);
-  DTensor17 KSVSV;
+  DTensor17 KSVSV;  // K0+V3, K1, K2, K3, K4, K5, K6, K7, K8, V0, V1, V2, V4+V3, V0, V1, V2, V4
   Contract(&KSVSV, K, 0, SVSV, 2);
-  DTensor16 KSVSV1;
+  DTensor16 KSVSV1;  // K0+V3, K1, K2, K3+V2, K4, K5, K6, K7, K8, V0, V1, V2, V4+V3, V0, V1, V4
   ContractSelf(&KSVSV1, KSVSV, 3, 15);
-  DTensor15 KSVSV2;
+  DTensor15 KSVSV2;  // K0+V3, K1, K2, K3+V2, K4+V4+V3, K5, K6, K7, K8, V0, V1, V2, V0, V1, V4
   ContractSelf(&KSVSV2, KSVSV1, 4, 12);
-  DTensor14 KSVSV3;
+  DTensor14 KSVSV3;  // K0+V3, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7, K8, V0, V1, V0, V1, V4
   ContractSelf(&KSVSV3, KSVSV2, 5, 11);
-  DTensor13 KSVSV4;
+  DTensor13 KSVSV4;  // K0+V3, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V1, V0, V1
   ContractSelf(&KSVSV4, KSVSV3, 7, 13);
-  DTensor25 KKSUSUSVSV;
+  DTensor25 KKSUSUSVSV;  // K0+V1, K1+U1, K2+U1, K3, K4, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V0, V1
   Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 10);
-  DTensor24 KKSUSUSVSV1;
+  DTensor24 KKSUSUSVSV1;  // K0+V1, K1+U1, K2+U1, K3+V1, K4, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V0
   ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 24);
-  DTensor22 KKSUSUSVSV2;
+  DTensor22 KKSUSUSVSV2;  // K0+V1, K1+U1, K2+U1, K3+V1, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K5+V2, K6, K7+V4, K8, V0, V0 (K4+V4+V3+K4)
   ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 17);
-  DTensor20 KKSUSUSVSV3;
+  DTensor20 KKSUSUSVSV3;  // K0+V1, K1+U1, K2+U1, K3+V1, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K6, K7+V4, K8, V0, V0 (K5+U4+K5+V2)
   ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 16);
-  DTensor18 KKSUSUSVSV4;
+  DTensor18 KKSUSUSVSV4;  // K0+V1, K1+U1, K2+U1, K3+V1, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K7+V4, K8, V0, V0 (K6+U3+U4+K6)
   ContractSelf2(&KKSUSUSVSV4, KKSUSUSVSV3, 4, 15);
-  DTensor16 KKSUSUSVSV5;
+  DTensor16 KKSUSUSVSV5;  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K8, V0, V0 (K7+U3+K7+V4)
   ContractSelf2(&KKSUSUSVSV5, KKSUSUSVSV4, 4, 14);
-  DTensor15 KKSUSUSVSV6;
+  DTensor15 KKSUSUSVSV6;  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U0, U2, K0+V3, K2, K3+V2, K8, V0, V0 (U2+K8)
   ContractSelf(&KKSUSUSVSV6, KKSUSUSVSV5, 6, 10);
+  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U0, U2, K2, K8, V0, V0 (K0+V3+K3+V2)
   ContractSelf(C, KKSUSUSVSV6, 8, 10);
 }
 
