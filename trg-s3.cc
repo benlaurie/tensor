@@ -21,15 +21,15 @@ void Make9j(DTensor9 *K) {
   PP.Set(2,0,2,1/sqrt(2));
   PP.Set(2,1,3,-1/sqrt(2));
   PP.Set(2,2,0,1/sqrt(2));
-  PP.Set(2,2,2,-1/2);
+  PP.Set(2,2,2,-1./2);
   PP.Set(2,3,1,1/sqrt(2));
-  PP.Set(2,3,3,1/2);
+  PP.Set(2,3,3,1./2);
   PP.Set(3,0,3,1/sqrt(2));
   PP.Set(3,1,2,1/sqrt(2));
   PP.Set(3,2,1,-1/sqrt(2));
-  PP.Set(3,2,3,1/2);
+  PP.Set(3,2,3,1./2);
   PP.Set(3,3,0,1/sqrt(2));
-  PP.Set(3,3,2,1/2);
+  PP.Set(3,3,2,1./2);
   uint8_t ind1[] = {0,1,2};
   uint8_t ind2[] = {0,1,3};
 
