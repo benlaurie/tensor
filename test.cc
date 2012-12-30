@@ -102,6 +102,6 @@ int main(int argc, char **argv) {
   std::cout << t9 << std::endl;
   std::cout << t10 << std::endl;
 
-  srandomdev();
+  srandom(time(NULL));
   TestContract();
 }
