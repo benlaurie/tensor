@@ -159,7 +159,7 @@ void DoFirstSVD(DTensor5 result[2], DTensor4 *B, uint8_t dc, double condi) {
           sv_list[sv_num][2] = i;
           ++sv_num;
         }
-    };
+    }
   qsort(sv_list, sv_num, sizeof(sv_list[0]), CompareSVs);
   uint8_t rho_A[3][3][5] = {{{0,1,2},{2},{2}},
       {{2},{0,1,2},{2}}, {{2},{2},{0,2,2,1,2}}};
