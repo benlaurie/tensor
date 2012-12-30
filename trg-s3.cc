@@ -183,6 +183,12 @@ void DoFirstSVD(DTensor5 result[2], DTensor4 *B, uint8_t dc, double condi) {
           gsl_matrix_get(V[rho_M][rho_N], m, i));
     }
   }
+  for (uint8_t rho_M = 0; rho_M < 3; ++rho_M)
+    for (uint8_t rho_N = 0; rho_N < 3; ++rho_N) {
+      gsl_matrix_free(U[rho_M][rho_N]);
+      gsl_vector_free(S[rho_M][rho_N]);
+      gsl_matrix_free(V[rho_M][rho_N]);
+    }
 }
 
 void DoFirstContraction(DTensor14 *C, const DTensor9 &K, const DTensor5 &SU,
