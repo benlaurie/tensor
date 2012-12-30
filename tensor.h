@@ -19,10 +19,12 @@ public:
   explicit Coordinate(const uint8_t coords[rank]) {
     memcpy(coords_, coords, sizeof coords_);
   }
+
   Coordinate() {
     for (rank_t d = 0; d < rank; ++d)
       coords_[d] = 0xff;
   }
+
   bool operator<(const Coordinate &other) const {
     for (rank_t d = 0; d < rank; ++d)
       if (coords_[d] < other.coords_[d])
@@ -31,6 +33,7 @@ public:
         return false;
     return false;
   }
+
   void Print(std::ostream &os) const {
     for (rank_t r = 0; r < rank; ++r) {
       if (r != 0)
@@ -38,11 +41,13 @@ public:
       os << (int)coords_[r];
     }
   }
+
   template <rank_t rank2> void Set(rank_t offset, Coordinate<rank2> coords) {
     assert(rank2 + offset <= rank);
     for (rank_t r = 0; r < rank2; ++r)
       coords_[r + offset] = coords.coord(r);
   }
+
   void Set(rank_t r, uint8_t coord) {
     assert(r < rank);
     assert(r > -1);
@@ -84,7 +89,8 @@ private:
   uint8_t coords_[rank];
 };
 
-template <rank_t rank> std::ostream &operator<<(std::ostream &out, const Coordinate<rank> &coord) {
+template <rank_t rank> std::ostream &operator<<(std::ostream &out,
+                                                const Coordinate<rank> &coord) {
   coord.Print(out);
   return out;
 } 
@@ -107,6 +113,7 @@ public:
     Coordinate<rank> coord(coords);
     Set(coord, value);
   }
+
   void Set(Coordinate<rank> coord, const Value &value) {
     assert(!isinf(value));
     assert(!isnan(value));
@@ -119,25 +126,33 @@ public:
     if (!ret.second)
       ret.first->second = value;
   }
+
   const Value &Get(uint8_t coords[rank]) const {
     Coordinate<rank> coord(coords);
     return Get(coord);
   }
+
   const Value &Get(Coordinate<rank> coord) const {
-    typename std::map<Coordinate<rank>, Value>::const_iterator i = elements_.find(coord);
+    typename std::map<Coordinate<rank>, Value>::const_iterator i
+        = elements_.find(coord);
     if (i == elements_.end()) {
       static Value zero(0);
       return zero;
     }
     return i->second;
   }
+
   void Print(std::ostream &os) const {
     typename std::map<Coordinate<rank>, Value>::const_iterator i;
     for (i = elements_.begin(); i != elements_.end(); ++i) {
       os << '[' << i->first << ": " << i->second << ']';
     }
   }
-  const std::map<Coordinate<rank>, Value> &elements() const { return elements_; }
+
+  const std::map<Coordinate<rank>, Value> &elements() const {
+    return elements_;
+  }
+
   gsl_matrix* GetGSLMatrix(uint8_t coords[rank - 2], uint8_t mrow, uint8_t mcol,
       uint8_t mrow_size, uint8_t mcol_size) const {
     gsl_matrix *M = gsl_matrix_calloc(mrow_size, mrow_size);
@@ -156,11 +171,13 @@ public:
       }
     return M;
   }
+
 private:
   std::map<Coordinate<rank>, Value> elements_;
 };
 
-template <rank_t rank, class Value> std::ostream &operator<<(std::ostream &out, const Tensor<rank, Value> &tensor) {
+template <rank_t rank, class Value>
+std::ostream &operator<<(std::ostream &out, const Tensor<rank, Value> &tensor) {
   tensor.Print(out);
   return out;
 }
@@ -332,177 +349,5 @@ void Contract6Tensors(Tensor<rank0, Value> *t_out,
   }
 }
 
-#if 0
-class DTensor1 : public Tensor<1, double> {
-public:
-  void Set(uint8_t c1, const double &value) {
-    uint8_t c[1];
-    c[0] = c1;
-    Tensor<1, double>::Set(c, value);
-  }
-};
-
-class DTensor2 : public Tensor<2, double> {
-public:
-  void Set(uint8_t c1, uint8_t c2, const double &value) {
-    uint8_t c[2];
-    c[0] = c1;
-    c[1] = c2;
-    Tensor<2, double>::Set(c, value);
-  }
-};
-
-class DTensor3 : public Tensor<3, double> {
-public:
-  void Set(uint8_t c1, uint8_t c2, uint8_t c3, const double &value) {
-    uint8_t c[3];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    Tensor<3, double>::Set(c, value);
-  }
-  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3) const {
-    uint8_t c[3];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    return Tensor<3, double>::Get(c);
-  }
-};
-
-class DTensor4 : public Tensor<4, double> {
-public:
-  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4,
-      const double &value) {
-    uint8_t c[4];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    c[3] = c4;
-    Tensor<4, double>::Set(c, value);
-  }
-  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4) const {
-    uint8_t c[4];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    c[3] = c4;
-    return Tensor<4, double>::Get(c);
-  }
-  gsl_matrix* GetGSLMatrix(uint8_t c1, uint8_t c2, uint8_t mrow, uint8_t mcol,
-      uint8_t mrow_size, uint8_t mcol_size) {
-    // c1 = value of first "unmatrixed" index
-    // c2 = value of second "unmatrixed" index
-    // mrow = index to be matrix row
-    // mcol = index to be matrix column
-    // mrow_size = number of rows
-    // mcol_size = number of columns
-    uint8_t c[2];
-    c[0] = c1;
-    c[1] = c2;
-    return Tensor<4, double>::GetGSLMatrix(c, mrow, mcol, mrow_size, mcol_size);
-  }
-};
-
-class DTensor5 : public Tensor<5, double> {
-public:
-  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
-      const double &value) {
-    uint8_t c[5];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    c[3] = c4;
-    c[4] = c5;
-    Tensor<5, double>::Set(c, value);
-  }
-  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4,
-      uint8_t c5) const {
-    uint8_t c[5];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    c[3] = c4;
-    c[4] = c5;
-    return Tensor<5, double>::Get(c);
-  }
-};
-
-class DTensor9 : public Tensor<9, double> {
-public:
-  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
-      uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9, const double &value) {
-    uint8_t c[9];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    c[3] = c4;
-    c[4] = c5;
-    c[5] = c6;
-    c[6] = c7;
-    c[7] = c8;
-    c[8] = c9;
-    Tensor<9, double>::Set(c, value);
-  }
-  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
-      uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9) const {
-    uint8_t c[9];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    c[3] = c4;
-    c[4] = c5;
-    c[5] = c6;
-    c[6] = c7;
-    c[7] = c8;
-    c[8] = c9;
-    return Tensor<9, double>::Get(c);
-  }
-};
-
-class DTensor14 : public Tensor<14, double> {
-public:
-  void Set(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
-      uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9, uint8_t c10, uint8_t c11,
-      uint8_t c12, uint8_t c13, uint8_t c14, const double &value) {
-    uint8_t c[14];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    c[3] = c4;
-    c[4] = c5;
-    c[5] = c6;
-    c[6] = c7;
-    c[7] = c8;
-    c[8] = c9;
-    c[9] = c10;
-    c[10] = c11;
-    c[11] = c12;
-    c[12] = c13;
-    c[13] = c14;
-    Tensor<14, double>::Set(c, value);
-  }
-  const double &Get(uint8_t c1, uint8_t c2, uint8_t c3, uint8_t c4, uint8_t c5,
-      uint8_t c6, uint8_t c7, uint8_t c8, uint8_t c9, uint8_t c10, uint8_t c11,
-      uint8_t c12, uint8_t c13, uint8_t c14) const {
-    uint8_t c[14];
-    c[0] = c1;
-    c[1] = c2;
-    c[2] = c3;
-    c[3] = c4;
-    c[4] = c5;
-    c[5] = c6;
-    c[6] = c7;
-    c[7] = c8;
-    c[8] = c9;
-    c[9] = c10;
-    c[10] = c11;
-    c[11] = c12;
-    c[12] = c13;
-    c[13] = c14;
-    return Tensor<14, double>::Get(c);
-  }
-};
-#endif
 #include "auto_tensor.h"
 
