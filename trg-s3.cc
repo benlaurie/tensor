@@ -10,38 +10,39 @@
 
 void Make9j(DTensor9 *K) {
   DTensor3 PP;
-  PP.Set(0,0,0,1);
-  PP.Set(0,1,1,1);
-  PP.Set(0,2,2,1/sqrt(2));
-  PP.Set(0,3,3,1/sqrt(2));
-  PP.Set(1,0,1,1);
-  PP.Set(1,1,0,1);
-  PP.Set(1,2,3,-1/sqrt(2));
-  PP.Set(1,3,2,1/sqrt(2));
-  PP.Set(2,0,2,1/sqrt(2));
-  PP.Set(2,1,3,-1/sqrt(2));
-  PP.Set(2,2,0,1/sqrt(2));
-  PP.Set(2,2,2,-1/2);
-  PP.Set(2,3,1,1/sqrt(2));
-  PP.Set(2,3,3,1/2);
-  PP.Set(3,0,3,1/sqrt(2));
-  PP.Set(3,1,2,1/sqrt(2));
-  PP.Set(3,2,1,-1/sqrt(2));
-  PP.Set(3,2,3,1/2);
-  PP.Set(3,3,0,1/sqrt(2));
-  PP.Set(3,3,2,1/2);
-  uint8_t ind1[] = {0,1,2};
-  uint8_t ind2[] = {0,1,3};
+  PP.Set(0, 0, 0, 1);
+  PP.Set(0, 1, 1, 1);
+  PP.Set(0, 2, 2, 1/sqrt(2));
+  PP.Set(0, 3, 3, 1/sqrt(2));
+  PP.Set(1, 0, 1, 1);
+  PP.Set(1, 1, 0, 1);
+  PP.Set(1, 2, 3, -1/sqrt(2));
+  PP.Set(1, 3, 2, 1/sqrt(2));
+  PP.Set(2, 0, 2, 1/sqrt(2));
+  PP.Set(2, 1, 3, -1/sqrt(2));
+  PP.Set(2, 2, 0, 1/sqrt(2));
+  PP.Set(2, 2, 2, -1./2);
+  PP.Set(2, 3, 1, 1/sqrt(2));
+  PP.Set(2, 3, 3, 1./2);
+  PP.Set(3, 0, 3, 1/sqrt(2));
+  PP.Set(3, 1, 2, 1/sqrt(2));
+  PP.Set(3, 2, 1, -1/sqrt(2));
+  PP.Set(3, 2, 3, 1./2);
+  PP.Set(3, 3, 0, 1/sqrt(2));
+  PP.Set(3, 3, 2, 1./2);
+
+  uint8_t ind1[] = {0, 1, 2};
+  uint8_t ind2[] = {0, 1, 3};
 
 #define F(x) \
   for (uint8_t x = 0; x < 3; ++x) \
     for (uint8_t a##x = ind1[x]; a##x <= ind2[x]; ++a##x)
 
   F(i) F(j) F(k) F(l) F(m) F(n) F(o) F(p) F(q)
-    K->Set(i,j,k,l,m,n,o,p,q,
-        K->Get(i,j,k,l,m,n,o,p,q)+
-        PP.Get(ai,aj,aq)*PP.Get(ak,al,aq)*PP.Get(an,am,ai)*PP.Get(ao,an,aj)*
-        PP.Get(ap,ao,ak)*PP.Get(am,ap,al));
+    K->Set(i, j, k, l, m, n, o, p, q,
+        K->Get(i, j, k, l, m, n, o, p, q) +
+        PP.Get(ai, aj, aq) * PP.Get(ak, al, aq) * PP.Get(an, am, ai) *
+        PP.Get(ao, an, aj) * PP.Get(ap, ao, ak) * PP.Get(am, ap, al));
 }
 
 void MakeFirstBlocks(DTensor4 *B, double a, double b, double c) {
@@ -114,28 +115,6 @@ void MakeFirstBlocks(DTensor4 *B, double a, double b, double c) {
   B->Set(2,2,4,2,sqrt(2)*expr8);
   B->Set(2,2,4,3,expr3*pow(expr4,2));
   B->Set(2,2,4,4,expr3*pow(expr4,2));
-
-//  double B00[][3] = {{pow(expr1,4), pow(expr2,2), 2*expr3*pow(expr1,2)},
-//      {pow(expr2,2), pow(expr4,4), 2*expr3*pow(expr4,2)},
-//      {2*expr3*pow(expr1,2), 2*expr3*pow(expr4,2), 4*pow(expr3,2)}};
-//  double B01 = 0;
-//  double B02 = 8*pow(a - b,2)*pow(-1 + c,2);
-//  double B10 = 0;
-//  double B11[][3] = {{pow(expr2,2), pow(expr2,2), 2*expr5},
-//      {pow(expr2,2), pow(expr2,2), 2*expr5},
-//      {2*expr5, 2*expr5, 4*pow(expr9,2)}};
-//  double B12 = 0;
-//  double B20 = 8*pow(a - b,2)*pow(-1 + c,2);
-//  double B21 = 0;
-//  double B22[][5] = {
-//      {expr3*pow(expr1,2), expr3*pow(expr1,2), sqrt(2)*expr6, expr5, expr5},
-//      {expr3*pow(expr1,2), expr3*pow(expr1,2), sqrt(2)*expr6, expr5, expr5},
-//      {sqrt(2)*expr6, sqrt(2)*expr6, 2*expr7, sqrt(2)*expr8, sqrt(2)*expr8},
-//      {expr5, expr5, sqrt(2)*expr8, expr3*pow(expr4,2), expr3*pow(expr4,2)},
-//      {expr5, expr5, sqrt(2)*expr8, expr3*pow(expr4,2), expr3*pow(expr4,2)}
-//  };
-//
-//  double B[][3] = {{B00, B01, B02},{B10, B11, B12},{B20,B21,B22}};
 }
 
 //FIXME: get rid of the ugly globals!
@@ -222,36 +201,38 @@ void DoFirstContraction(DTensor14 *C, const DTensor9 &K, const DTensor5 &SU,
   ContractSelf(&KSUSU4, KSUSU3, 7, 13);
   DTensor9 SVSV;  // V0, V1, V2, V3, V4+V3, V0, V1, V2, V4
   Contract(&SVSV, SV, 4, SV, 3);
-  DTensor17 KSVSV;  // K0+V3, K1, K2, K3, K4, K5, K6, K7, K8, V0, V1, V2, V4+V3, V0, V1, V2, V4
+  DTensor17 KSVSV;  // K0+V2, K1, K2, K3, K4, K5, K6, K7, K8, V0, V1, V2, V4+V3, V0, V1, V2, V4
   Contract(&KSVSV, K, 0, SVSV, 2);
-  DTensor16 KSVSV1;  // K0+V3, K1, K2, K3+V2, K4, K5, K6, K7, K8, V0, V1, V2, V4+V3, V0, V1, V4
+  DTensor16 KSVSV1;  // K0+V2, K1, K2, K3+V2, K4, K5, K6, K7, K8, V0, V1, V2, V4+V3, V0, V1, V4
   ContractSelf(&KSVSV1, KSVSV, 3, 15);
-  DTensor15 KSVSV2;  // K0+V3, K1, K2, K3+V2, K4+V4+V3, K5, K6, K7, K8, V0, V1, V2, V0, V1, V4
+  DTensor15 KSVSV2;  // K0+V2, K1, K2, K3+V2, K4+V4+V3, K5, K6, K7, K8, V0, V1, V2, V0, V1, V4
   ContractSelf(&KSVSV2, KSVSV1, 4, 12);
-  DTensor14 KSVSV3;  // K0+V3, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7, K8, V0, V1, V0, V1, V4
+  DTensor14 KSVSV3;  // K0+V2, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7, K8, V0, V1, V0, V1, V4
   ContractSelf(&KSVSV3, KSVSV2, 5, 11);
-  DTensor13 KSVSV4;  // K0+V3, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V1, V0, V1
+  DTensor13 KSVSV4;  // K0+V2, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V1, V0, V1
   ContractSelf(&KSVSV4, KSVSV3, 7, 13);
-  DTensor25 KKSUSUSVSV;  // K0+V1, K1+U1, K2+U1, K3, K4, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V0, V1
+  DTensor25 KKSUSUSVSV;  // K0+V1, K1+U1, K2+U1, K3, K4, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V2, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V0, V1
   Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 10);
-  DTensor24 KKSUSUSVSV1;  // K0+V1, K1+U1, K2+U1, K3+V1, K4, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V0
+  DTensor24 KKSUSUSVSV1;  // K0+V1, K1+U1, K2+U1, K3+V1, K4, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V2, K1, K2, K3+V2, K4+V4+V3, K5+V2, K6, K7+V4, K8, V0, V0
   ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 24);
-  DTensor22 KKSUSUSVSV2;  // K0+V1, K1+U1, K2+U1, K3+V1, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K5+V2, K6, K7+V4, K8, V0, V0 (K4+V4+V3+K4)
+  DTensor22 KKSUSUSVSV2;  // K0+V1, K1+U1, K2+U1, K3+V1, K5+U4, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V2, K1, K2, K3+V2, K5+V2, K6, K7+V4, K8, V0, V0 (K4+V4+V3+K4)
   ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 17);
-  DTensor20 KKSUSUSVSV3;  // K0+V1, K1+U1, K2+U1, K3+V1, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K6, K7+V4, K8, V0, V0 (K5+U4+K5+V2)
+  DTensor20 KKSUSUSVSV3;  // K0+V1, K1+U1, K2+U1, K3+V1, K6+U3+U4, K7+U3, K8, U0, U2, U0, U2, K0+V2, K1, K2, K3+V2, K6, K7+V4, K8, V0, V0 (K5+U4+K5+V2)
   ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 16);
-  DTensor18 KKSUSUSVSV4;  // K0+V1, K1+U1, K2+U1, K3+V1, K7+U3, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K7+V4, K8, V0, V0 (K6+U3+U4+K6)
+  DTensor18 KKSUSUSVSV4;  // K0+V1, K1+U1, K2+U1, K3+V1, K7+U3, K8, U0, U2, U0, U2, K0+V2, K1, K2, K3+V2, K7+V4, K8, V0, V0 (K6+U3+U4+K6)
   ContractSelf2(&KKSUSUSVSV4, KKSUSUSVSV3, 4, 15);
-  DTensor16 KKSUSUSVSV5;  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U2, U0, U2, K0+V3, K1, K2, K3+V2, K8, V0, V0 (K7+U3+K7+V4)
+  DTensor16 KKSUSUSVSV5;  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U2, U0, U2, K0+V2, K1, K2, K3+V2, K8, V0, V0 (K7+U3+K7+V4)
   ContractSelf2(&KKSUSUSVSV5, KKSUSUSVSV4, 4, 14);
-  DTensor15 KKSUSUSVSV6;  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U0, U2, K0+V3, K2, K3+V2, K8, V0, V0 (U2+K8)
+  DTensor15 KKSUSUSVSV6;  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U2+K1, U0, U2, K0+V2, K2, K3+V2, K8, V0, V0
   ContractSelf(&KKSUSUSVSV6, KKSUSUSVSV5, 6, 10);
-  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U0, U2, K2, K8, V0, V0 (K0+V3+K3+V2)
+  // K0+V1, K1+U1, K2+U1, K3+V1, K8, U0, U2+K1, U0, U2+K2, K0+V2, K3+V2, K8, V0, V0
   ContractSelf(C, KKSUSUSVSV6, 8, 10);
+  // Convert to Matlab (base 1): 4, 7, 10, 13, 1(/2), 6(/9), 8, (6/)9, 11, 5, 14, (1/)2, 3(/12), (3/)12
 }
 
-void TRGS3(double a, double b, double c, uint8_t dc, double condi,
-    uint8_t iter) {
+void TRGS3(const double a, const double b, const double c,
+    const uint8_t dc, const double condi, const uint8_t iter) {
+  //FIXME move K construction into main() to save repeated construction
   DTensor9 K;
   Make9j(&K);
   std::cout << K << std::endl;
@@ -270,5 +251,5 @@ void TRGS3(double a, double b, double c, uint8_t dc, double condi,
 }
 
 int main(int argc, char **argv) {
-  TRGS3(0,0,0,9,1e-8,1);
+  TRGS3(0, 0, 0, 9, 1e-8, 1);
 }
