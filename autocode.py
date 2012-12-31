@@ -3,7 +3,7 @@ def Args(rank):
     for n in range(rank):
         if n != 0:
             s += ', '
-        s += 'uint8_t c' + str(n)
+        s += 'rank_t c' + str(n)
     return s
 
 def Coords(rank):
