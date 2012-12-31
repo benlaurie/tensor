@@ -91,6 +91,10 @@ int main(int argc, char **argv) {
   DTensor3 t10;
   ContractSelf(&t10, t3, 1, 0);
 
+  DTensor3 t11;
+  rank_t mapping[3] = {2, 0, 1};
+  Rearrange(&t11, t1, mapping);
+
   std::cout << t1 << std::endl;
   std::cout << t2 << std::endl;
   std::cout << t3 << std::endl;
@@ -101,6 +105,7 @@ int main(int argc, char **argv) {
   std::cout << t8 << std::endl;
   std::cout << t9 << std::endl;
   std::cout << t10 << std::endl;
+  std::cout << t11 << std::endl;
 
   srandom(time(NULL));
   TestContract();
