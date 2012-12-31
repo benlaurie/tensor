@@ -170,20 +170,19 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
   uint8_t rho_M;
   uint8_t rho_N;
   uint8_t i;
+  double sv;
   for (uint8_t n = 0; n < std::min(sv_num, dc); ++n) {
     rho_M = sv_list[n][0];
     rho_N = sv_list[n][1];
     i = sv_list[n][2];
     ++sv_len[rho_M][rho_N];
     for (uint8_t m = 0; m < msize[rho_M][rho_N]; ++m) {
+      sv = sqrt(gsl_vector_get(S[rho_M][rho_N], i) * dim[rho_M] * dim[rho_N] /
+          gsl_vector_get(S[sv_list[0][0]][sv_list[0][1]], sv_list[0][2]));
       result[0].Set(i, rho_M, rho_N, rho_A[rho_M][rho_N][m],
-          rho_B[rho_M][rho_N][m],
-          sqrt(gsl_vector_get(S[rho_M][rho_N], i) * dim[rho_M] * dim[rho_N]) *
-          gsl_matrix_get(U[rho_M][rho_N], m, i));
+          rho_B[rho_M][rho_N][m], sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
       result[1].Set(i, rho_M, rho_N, rho_A[rho_M][rho_N][m],
-          rho_B[rho_M][rho_N][m],
-          sqrt(gsl_vector_get(S[rho_M][rho_N], i) * dim[rho_M] * dim[rho_N]) *
-          gsl_matrix_get(V[rho_M][rho_N], m, i));
+          rho_B[rho_M][rho_N][m], sv * gsl_matrix_get(V[rho_M][rho_N], m, i));
     }
   }
   for (uint8_t rho_M = 0; rho_M < 3; ++rho_M)
