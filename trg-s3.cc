@@ -155,7 +155,7 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
       gsl_linalg_SV_decomp_jacobi(U[rho_M][rho_N], V[rho_M][rho_N],
           S[rho_M][rho_N]);
       for (uint8_t i = 0; i < std::min(msize[rho_M][rho_N], dc); ++i)
-        if (abs(gsl_vector_get(S[rho_M][rho_N], i)) > condi) {
+        if (fabs(gsl_vector_get(S[rho_M][rho_N], i)) > condi) {
           sv_list[sv_num][0] = rho_M;
           sv_list[sv_num][1] = rho_N;
           sv_list[sv_num][2] = i;
@@ -287,7 +287,7 @@ void DoFirstContraction(DTensor14 *C, const DTensor9 &K, const DTensor5 &SU,
 }
 
 void MakeSecondBlocks(DTensor4 *B, const DTensor14 *C,
-    const uint8_t sv_len[3][3]) {
+    const uint8_t sv_len[3][3], const double condi) {
   //FIXME: check limits of loops are consistent with change for 1-based to 0-based
   uint8_t ind[] = {3, 3, 5};
   uint8_t rho_A[3][5] = {{0, 1, 2}, {0, 1, 2}, {0, 2, 2, 1, 2}};
@@ -298,6 +298,7 @@ void MakeSecondBlocks(DTensor4 *B, const DTensor14 *C,
 //  uint8_t m_B[3][3][m_array_size];
   uint8_t k;
   uint8_t l;
+  double val;
 
   for (uint8_t rho_M = 0; rho_M < 3; ++rho_M)
     for (uint8_t rho_N = 0; rho_N < 3; ++rho_N) {
@@ -317,12 +318,13 @@ void MakeSecondBlocks(DTensor4 *B, const DTensor14 *C,
                       m3 < sv_len[rho_A[rho_M][i]][rho_A[rho_N][j]]; ++m3)
                     for (uint8_t m4 = 0;
                         m4 < sv_len[rho_B[rho_M][i]][rho_B[rho_N][j]]; ++m4) {
-                      B->Set(rho_M, rho_N, k, l,
-                          C->Get(rho_M, rho_N, m1, rho_A[rho_M][m],
-                              rho_A[rho_N][n], m2, rho_B[rho_M][m],
-                              rho_B[rho_N][n], m3, rho_A[rho_M][i],
-                              rho_A[rho_N][j], m4, rho_B[rho_M][i],
-                              rho_B[rho_N][j]));
+                      val = C->Get(rho_M, rho_N, m1, rho_A[rho_M][m],
+                          rho_A[rho_N][n], m2, rho_B[rho_M][m],
+                          rho_B[rho_N][n], m3, rho_A[rho_M][i],
+                          rho_A[rho_N][j], m4, rho_B[rho_M][i],
+                          rho_B[rho_N][j]);
+                      if (fabs(val) > condi)
+                        B->Set(rho_M, rho_N, k, l, val);
                       ++l;
                     }
               ++k;
@@ -350,7 +352,7 @@ void TRGS3(const double a, const double b, const double c,
   DoFirstContraction(&C1, K, SU, SV);
   std::cout << C1 << std::endl;
   DTensor4 B2;
-  MakeSecondBlocks(&B2, &C1, sv_len);
+  MakeSecondBlocks(&B2, &C1, sv_len, condi);
   std::cout << B2 << std::endl;
 }
 
