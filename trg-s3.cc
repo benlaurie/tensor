@@ -395,7 +395,7 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
 }
 
 void TRGS3(const double a, const double b, const double c,
-    const uint8_t dc, const double condi, const uint8_t iter) {
+    const uint8_t dc, const double condi, const unsigned iter) {
   //FIXME: move K construction into main() to save repeated construction
   DTensor9 K;
   Make9j(&K);
@@ -422,7 +422,7 @@ void TRGS3(const double a, const double b, const double c,
   DTensor3 m_B;
   MakeSecondBlocks(&B2, &m_A, &m_B, &C1, ind, sv_len, rho_A, rho_B, condi);
   std::cout << B2 << std::endl;
-  for (uint8_t i = 0; i < iter; ++i) {
+  for (unsigned i = 0; i < iter; ++i) {
     DTensor9 SVD2[2];
     DoLoopSVD(SVD2, sv_len, &B2, dc, condi, rho_A, rho_B, &m_A, &m_B);
     DTensor9 &SU2 = SVD2[0];
@@ -433,5 +433,5 @@ void TRGS3(const double a, const double b, const double c,
 }
 
 int main(int argc, char **argv) {
-  TRGS3(0, 0, 0, 9, 1e-8, 1);
+  TRGS3(0, 0, 0, 9, 1e-8, 1000);
 }
