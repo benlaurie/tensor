@@ -5,6 +5,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
+#include <gsl/gsl_sort_vector.h>
 
 #include "tensor.h"
 
@@ -150,9 +151,9 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
       sv_len[rho_M][rho_N] = 0;
       U[rho_M][rho_N] = B->GetGSLMatrix(rho_M, rho_N, 2, 3, msize[rho_M][rho_N],
           msize[rho_M][rho_N]);
-      S[rho_M][rho_N] = gsl_vector_alloc(msize[rho_N][rho_M]);
-      V[rho_M][rho_N] = gsl_matrix_alloc(msize[rho_N][rho_M],
-          msize[rho_N][rho_M]);
+      S[rho_M][rho_N] = gsl_vector_alloc(msize[rho_M][rho_N]);
+      V[rho_M][rho_N] = gsl_matrix_alloc(msize[rho_M][rho_N],
+          msize[rho_M][rho_N]);
       gsl_linalg_SV_decomp_jacobi(U[rho_M][rho_N], V[rho_M][rho_N],
           S[rho_M][rho_N]);
       for (uint8_t i = 0; i < std::min(msize[rho_M][rho_N], dc); ++i)
@@ -342,19 +343,19 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
       sv_len[rho_M][rho_N] = 0;
       U[rho_M][rho_N] = B->GetGSLMatrix(rho_M, rho_N, 2, 3, msize[rho_M][rho_N],
           msize[rho_M][rho_N]);
-      S[rho_M][rho_N] = gsl_vector_alloc(msize[rho_N][rho_M]);
-      V[rho_M][rho_N] = gsl_matrix_alloc(msize[rho_N][rho_M],
-          msize[rho_N][rho_M]);
+      S[rho_M][rho_N] = gsl_vector_alloc(msize[rho_M][rho_N]);
+      V[rho_M][rho_N] = gsl_matrix_alloc(msize[rho_M][rho_N],
+          msize[rho_M][rho_N]);
       gsl_linalg_SV_decomp_jacobi(U[rho_M][rho_N], V[rho_M][rho_N],
           S[rho_M][rho_N]);
-      for (uint8_t i = 0; i < std::min(msize[rho_M][rho_N], dc); ++i)
+      for (uint8_t i = 0; i < std::min(msize[rho_M][rho_N], dc); ++i) {
         if (fabs(gsl_vector_get(S[rho_M][rho_N], i)) > condi) {
-          std::cout << int(rho_M) << std::endl;
           sv_list[sv_num][0] = rho_M;
           sv_list[sv_num][1] = rho_N;
           sv_list[sv_num][2] = i;
           ++sv_num;
         }
+      }
     }
   qsort(sv_list, sv_num, sizeof(sv_list[0]), CompareSVs);
   uint8_t rho_M;
@@ -422,9 +423,8 @@ void TRGS3(const double a, const double b, const double c,
   MakeSecondBlocks(&B2, &m_A, &m_B, &C1, ind, sv_len, rho_A, rho_B, condi);
   std::cout << B2 << std::endl;
   for (uint8_t i = 0; i < iter; ++i) {
-    DTensor4 B3;
     DTensor9 SVD2[2];
-    DoLoopSVD(SVD2, sv_len, &B3, dc, condi, rho_A, rho_B, &m_A, &m_B);
+    DoLoopSVD(SVD2, sv_len, &B2, dc, condi, rho_A, rho_B, &m_A, &m_B);
     DTensor9 &SU2 = SVD2[0];
     DTensor9 &SV2 = SVD2[1];
     std::cout << SU2 << std::endl;
