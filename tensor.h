@@ -294,13 +294,13 @@ void ContractSelf2(Tensor<rank - 2, Value> *t_out,
 
 template <rank_t rank, class Value>
 void Rearrange(Tensor<rank, Value> *t_out,
-    const Tensor<rank, Value> &t_in, rank_t mapping[rank]) {
+               const Tensor<rank, Value> &t_in, rank_t mapping[rank]) {
   typename std::map<Coordinate<rank>, Value>::const_iterator i;
-    for (i = t_in.elements().begin(); i != t_in.elements().end(); ++i) {
-      Coordinate<rank> new_coord;
-      for (uint8_t j = 0; j < rank; ++j)
-        new_coord.Set(j, i->first.coord(mapping[j]));
-      t_out->Set(new_coord, t_in.Get(i->first));
+  for (i = t_in.elements().begin(); i != t_in.elements().end(); ++i) {
+    Coordinate<rank> new_coord;
+    for (uint8_t j = 0; j < rank; ++j)
+      new_coord.Set(j, i->first.coord(mapping[j]));
+    t_out->Set(new_coord, t_in.Get(i->first));
   }
 }
 
