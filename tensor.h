@@ -53,7 +53,7 @@ public:
     assert(r > -1);
     coords_[r] = coord;
   }
-      
+
   const uint8_t coord(rank_t r) const {
     assert(r < rank);
     return coords_[r];
@@ -93,7 +93,7 @@ template <rank_t rank> std::ostream &operator<<(std::ostream &out,
                                                 const Coordinate<rank> &coord) {
   coord.Print(out);
   return out;
-} 
+}
 
 template <rank_t rank, class Value> class Tensor {
 public:
@@ -155,7 +155,7 @@ public:
 
   gsl_matrix *GetGSLMatrix(uint8_t coords[rank - 2], uint8_t mrow, uint8_t mcol,
                            uint8_t mrow_size, uint8_t mcol_size) const {
-    gsl_matrix *M = gsl_matrix_calloc(mrow_size, mrow_size);
+    gsl_matrix *M = gsl_matrix_calloc(mrow_size, mcol_size);
     uint8_t full_coords[rank];
     uint8_t d = 0;
     for (uint8_t i = 0; i < rank; ++i)
