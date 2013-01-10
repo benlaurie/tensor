@@ -26,10 +26,6 @@ def DTensor(rank):
     Coords(rank)
     print '    return Tensor<' + str(rank) + ', double>::Get(c);'
     print '  }'
-    
-    print '  void Clear() {'
-    print '    Tensor<' + str(rank) + ', double>::Clear();'
-    print '  }'
 
     #FIXME: GetGSLMatrix should have rank - 2 "unmatrixed" indices
     print '  gsl_matrix *GetGSLMatrix(rank_t c1, rank_t c2, rank_t mrow, rank_t mcol,'

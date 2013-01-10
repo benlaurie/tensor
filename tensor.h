@@ -202,6 +202,8 @@ void Multiply(Tensor<rank1 + rank2, Value> *t_out,
   }
 }
 
+//FIXME: rename Contract2 -> Contract and Contract -> something more appropriate
+
 template <rank_t rank1, rank_t rank2, class Value>
 void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
               const Tensor<rank1, Value> &t1, uint8_t d1,

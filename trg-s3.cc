@@ -49,26 +49,26 @@ void Make9j(DTensor9 *K) {
 void MakeFirstBlocks(DTensor4 *B, const double a, const double b,
     const double c) {
   double expr1 = 1 + a + 2 * b + 2 * c;
-  double expr2 = pow(a, 2) + 4 * a * b + 4 * pow(b, 2) - pow(1 + 2 * c, 2);
-  double expr3 = pow(a, 2) - 2 * a * b + pow(b, 2) + pow(-1 + c, 2);
+  double expr2 = a * a + 4 * a * b + 4 * b * b - (1 + 2 * c) * (1 + 2 * c);
+  double expr3 = a * a - 2 * a * b + b * b + (-1 + c) * (-1 + c);
   double expr4 = -1 + a + 2 * b - 2 * c;
   double expr5 = pow(a, 4) + 2 * b * pow(a, 3) + 4 * pow(b, 4) +
-      pow(b, 2) * (-5 + 4 * c - 8 * pow(c, 2)) -
-      2 * a * b * (1 + 2 * pow(b, 2) - 8 * c- 2 * pow(c, 2)) +
-      pow(1 + c - 2 * pow(c, 2), 2) -
-      pow(a, 2) * (2 + 3 * pow(b, 2) + 2 * c + 5 * pow(c, 2));
+      b * b * (-5 + 4 * c - 8 * c * c) -
+      2 * a * b * (1 + 2 * b * b - 8 * c- 2 * c * c) +
+      (1 + c - 2 * c * c) * (1 + c - 2 * c * c) -
+      a * a * (2 + 3 * b * b + 2 * c + 5 * c * c);
   double expr6 = pow(a, 4) - 2 * pow(b, 4) - 2 * b * pow((-1 + c), 3) -
       pow(b, 3) * (1 + 2 * c) - pow((-1 + c), 3) * (1 + 2 * c) +
-      pow(a, 3) * (1 - b + 2 * c) - 3 * pow(a, 2) * b * (1 + b + 2 * c) +
-      a * (5 * pow(b, 3) - pow(-1 + c, 3) + pow(b, 2) * (3 + 6 * c));
-  double expr7 = pow(a, 4) - 4 * b * pow(a, 3) + 6 * pow(a, 2) * pow(b, 2) -
+      pow(a, 3) * (1 - b + 2 * c) - 3 * a * a * b * (1 + b + 2 * c) +
+      a * (5 * pow(b, 3) - pow(-1 + c, 3) + b * b * (3 + 6 * c));
+  double expr7 = pow(a, 4) - 4 * b * pow(a, 3) + 6 * a * a * b * b -
       4 * a * pow(b, 3) + pow(b, 4) + pow(-1 + c, 4);
   double expr8 = pow(a, 4) - 2 * pow(b, 4) -
-      3 * b * pow(a, 2) * (-1 + b - 2 * c) + 2 * b * pow(-1 + c, 3) +
+      3 * b * a * a * (-1 + b - 2 * c) + 2 * b * pow(-1 + c, 3) +
       pow(b, 3) * (1 + 2 * c) - pow(-1 + c, 3) * (1 + 2 * c) -
       pow(a, 3) * (1 + b + 2 * c) + a * (5 * pow(b, 3) + pow(-1 + c, 3) -
-      3 * pow(b, 2) * (1 + 2 * c));
-  double expr9 = pow(a, 2) - 2 * a * b + pow(b, 2) - pow(-1 + c, 2);
+      3 * b * b * (1 + 2 * c));
+  double expr9 = a * a - 2 * a * b + b * b - (-1 + c) * (-1 + c);
 
   B->Set(0, 0, 0, 0, pow(expr1, 4));
   B->Set(0, 0, 0, 1, pow(expr2, 2));
@@ -550,8 +550,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
 
 void TRGS3(const double a, const double b, const double c,
     const uint8_t dc, const double condi, const uint8_t iter,
-    const DTensor9 *K) {
-  std::cout << *K << std::endl;
+    const DTensor9 &K) {
+  std::cout << K << std::endl;
   DTensor4 B1;
   MakeFirstBlocks(&B1, a, b, c);
   std::cout << B1 << std::endl;
@@ -563,13 +563,13 @@ void TRGS3(const double a, const double b, const double c,
   std::cout << SU1 << std::endl;
   std::cout << SV1 << std::endl;
   DTensor14 C1;
-  DoFirstContraction(&C1, *K, SU1, SV1);
+  DoFirstContraction(&C1, K, SU1, SV1);
   std::cout << C1 << std::endl;
   DTensor4 B2;
   uint8_t ind[] = {3, 3, 5};
   uint8_t rho_A[3][5] = {{0, 1, 2}, {0, 1, 2}, {0, 2, 2, 1, 2}};
   uint8_t rho_B[3][5] = {{0, 1, 2}, {1, 0, 2}, {2, 0, 2, 2, 1}};
-  uint8_t m_max = 25*int(pow(dc, 2));
+  uint8_t m_max = 25 * dc * dc;
   uint8_t m_A[m_max][3][3];
   uint8_t m_B[m_max][3][3];
   MakeSecondBlocks(&B2, m_A, m_B, &C1, ind, sv_len, rho_A, rho_B, condi);
@@ -584,7 +584,7 @@ void TRGS3(const double a, const double b, const double c,
     std::cout << SU2 << std::endl;
     std::cout << SV2 << std::endl;
     DTensor14 C2;
-    DoLoopContraction(&C2, *K, SU2, SV2);
+    DoLoopContraction(&C2, K, SU2, SV2);
     std::cout << C2 << std::endl;
     MakeLoopBlocks(&B2, m_A, m_B, &C2, ind, sv_len, rho_A, rho_B, condi);
     std::cout << B2 << std::endl;
@@ -595,5 +595,5 @@ int main(int argc, char **argv) {
   DTensor9 K;
   Make9j(&K);
 
-  TRGS3(0, 0, 0, 9, 1e-8, 10, &K);
+  TRGS3(0, 0, 0, 9, 1e-8, 10, K);
 }
