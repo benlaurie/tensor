@@ -172,6 +172,10 @@ public:
     return M;
   }
 
+  void Clear() {
+    elements_.clear();
+  }
+
 private:
   std::map<Coordinate<rank>, Value> elements_;
 };
