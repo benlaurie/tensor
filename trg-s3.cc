@@ -569,7 +569,7 @@ void TRGS3(const double a, const double b, const double c,
   uint8_t ind[] = {3, 3, 5};
   uint8_t rho_A[3][5] = {{0, 1, 2}, {0, 1, 2}, {0, 2, 2, 1, 2}};
   uint8_t rho_B[3][5] = {{0, 1, 2}, {1, 0, 2}, {2, 0, 2, 2, 1}};
-  uint8_t m_max = 25 * dc * dc;
+  size_t m_max = 25 * dc * dc;
   uint8_t m_A[m_max][3][3];
   uint8_t m_B[m_max][3][3];
   MakeSecondBlocks(&B2, m_A, m_B, &C1, ind, sv_len, rho_A, rho_B, condi);
