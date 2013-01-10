@@ -47,7 +47,7 @@ void Make9j(DTensor9 *K) {
 }
 
 void MakeFirstBlocks(DTensor4 *B, const double a, const double b,
-    const double c) {
+                     const double c) {
   double expr1 = 1 + a + 2 * b + 2 * c;
   double expr2 = a * a + 4 * a * b + 4 * b * b - (1 + 2 * c) * (1 + 2 * c);
   double expr3 = a * a - 2 * a * b + b * b + (-1 + c) * (-1 + c);
@@ -122,8 +122,9 @@ void MakeFirstBlocks(DTensor4 *B, const double a, const double b,
 }
 
 void MakeSecondBlocks(DTensor4 *B, uint8_t m_A[][3][3], uint8_t m_B[][3][3],
-    const DTensor14 *C, const uint8_t ind[3], const uint8_t sv_len[3][3],
-    const uint8_t rho_A[3][5], const uint8_t rho_B[3][5], const double condi) {
+                      const DTensor14 *C, const uint8_t ind[3],
+                      const uint8_t sv_len[3][3], const uint8_t rho_A[3][5],
+                      const uint8_t rho_B[3][5], const double condi) {
   uint8_t k;
   uint8_t l;
   double C_val;
@@ -162,8 +163,9 @@ void MakeSecondBlocks(DTensor4 *B, uint8_t m_A[][3][3], uint8_t m_B[][3][3],
 }
 
 void MakeLoopBlocks(DTensor4 *B, uint8_t m_A[][3][3], uint8_t m_B[][3][3],
-    const DTensor14 *C, const uint8_t ind[3], const uint8_t sv_len[3][3],
-    const uint8_t rho_A[3][5], const uint8_t rho_B[3][5], const double condi) {
+                    const DTensor14 *C, const uint8_t ind[3],
+                    const uint8_t sv_len[3][3], const uint8_t rho_A[3][5],
+                    const uint8_t rho_B[3][5], const double condi) {
   MakeSecondBlocks(B, m_A, m_B, C, ind, sv_len, rho_A, rho_B, condi);
 }
 
@@ -185,7 +187,7 @@ int CompareSVs(const void *a_, const void *b_) {
 }
 
 void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
-    const uint8_t dc, const double condi) {
+                const uint8_t dc, const double condi) {
   uint8_t sv_list[9*dc][3];
   uint8_t sv_num = 0;
   gsl_matrix *U[3][3];
@@ -198,12 +200,12 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
     for (uint8_t rho_N = 0; rho_N < 3; ++rho_N) {
       sv_len[rho_M][rho_N] = 0;
       U[rho_M][rho_N] = B->GetGSLMatrix(rho_M, rho_N, 2, 3, msize[rho_M][rho_N],
-          msize[rho_M][rho_N]);
+                                        msize[rho_M][rho_N]);
       S[rho_M][rho_N] = gsl_vector_alloc(msize[rho_M][rho_N]);
       V[rho_M][rho_N] = gsl_matrix_alloc(msize[rho_M][rho_N],
-          msize[rho_M][rho_N]);
+                                         msize[rho_M][rho_N]);
       gsl_linalg_SV_decomp_jacobi(U[rho_M][rho_N], V[rho_M][rho_N],
-          S[rho_M][rho_N]);
+                                  S[rho_M][rho_N]);
       for (uint8_t i = 0; i < std::min(msize[rho_M][rho_N], dc); ++i)
         if (fabs(gsl_vector_get(S[rho_M][rho_N], i)) > condi) {
           sv_list[sv_num][0] = rho_M;
@@ -216,16 +218,17 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
 
   qsort(sv_list, sv_num, sizeof(sv_list[0]), CompareSVs);
 
-  uint8_t rho_A[3][3][5] = {{{0, 1, 2}, {2}, {2}},
-      {{2}, {0, 1, 2}, {2}}, {{2}, {2}, {0, 2, 2, 1, 2}}};
-  uint8_t rho_B[3][3][5] = {{{0, 1, 2}, {2}, {2}},
-      {{2}, {1, 0, 2}, {2}}, {{2}, {2}, {2, 0, 2, 2, 1}}};
+  uint8_t rho_A[3][3][5] = {{{0, 1, 2}, {2}, {2}}, {{2}, {0, 1, 2}, {2}},
+                            {{2}, {2}, {0, 2, 2, 1, 2}}};
+  uint8_t rho_B[3][3][5] = {{{0, 1, 2}, {2}, {2}}, {{2}, {1, 0, 2}, {2}},
+                            {{2}, {2}, {2, 0, 2, 2, 1}}};
   uint8_t rho_M;
   uint8_t rho_N;
   uint8_t i;
   double sv;
   double sv_max = gsl_vector_get(S[sv_list[0][0]][sv_list[0][1]],
-      sv_list[0][2]) * dim[sv_list[0][0]] * dim[sv_list[0][1]];
+                                 sv_list[0][2]) *
+                                     dim[sv_list[0][0]] * dim[sv_list[0][1]];
 
   for (uint8_t n = 0; n < std::min(sv_num, dc); ++n) {
     rho_M = sv_list[n][0];
@@ -234,11 +237,13 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
 
     for (uint8_t m = 0; m < msize[rho_M][rho_N]; ++m) {
       sv = sqrt(gsl_vector_get(S[rho_M][rho_N], i) * dim[rho_M] * dim[rho_N] /
-          sv_max);
+                sv_max);
       result[0].Set(i, rho_M, rho_N, rho_A[rho_M][rho_N][m],
-          rho_B[rho_M][rho_N][m], sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
+                    rho_B[rho_M][rho_N][m],
+                    sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
       result[1].Set(i, rho_M, rho_N, rho_A[rho_M][rho_N][m],
-          rho_B[rho_M][rho_N][m], sv * gsl_matrix_get(V[rho_M][rho_N], m, i));
+                    rho_B[rho_M][rho_N][m],
+                    sv * gsl_matrix_get(V[rho_M][rho_N], m, i));
     }
   }
 
@@ -251,9 +256,9 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
 }
 
 void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
-    const uint8_t dc, const double condi, const uint8_t rho_A[3][5],
-    const uint8_t rho_B[3][5], const uint8_t m_A[][3][3],
-    const uint8_t m_B[][3][3]) {
+               const uint8_t dc, const double condi, const uint8_t rho_A[3][5],
+               const uint8_t rho_B[3][5], const uint8_t m_A[][3][3],
+               const uint8_t m_B[][3][3]) {
   uint8_t sv_list[9*dc][3];
   uint8_t sv_num = 0;
   gsl_matrix *U[3][3];
@@ -265,12 +270,12 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
     for (uint8_t rho_N = 0; rho_N < 3; ++rho_N) {
       sv_len[rho_M][rho_N] = 0;
       U[rho_M][rho_N] = B->GetGSLMatrix(rho_M, rho_N, 2, 3, msize[rho_M][rho_N],
-          msize[rho_M][rho_N]);
+                                        msize[rho_M][rho_N]);
       S[rho_M][rho_N] = gsl_vector_alloc(msize[rho_M][rho_N]);
       V[rho_M][rho_N] = gsl_matrix_alloc(msize[rho_M][rho_N],
-          msize[rho_M][rho_N]);
+                                         msize[rho_M][rho_N]);
       gsl_linalg_SV_decomp_jacobi(U[rho_M][rho_N], V[rho_M][rho_N],
-          S[rho_M][rho_N]);
+                                  S[rho_M][rho_N]);
       for (uint8_t i = 0; i < std::min(msize[rho_M][rho_N], dc); ++i) {
         if (fabs(gsl_vector_get(S[rho_M][rho_N], i)) > condi) {
           sv_list[sv_num][0] = rho_M;
@@ -291,7 +296,8 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
   uint8_t m_B_val;
   double sv;
   double sv_max = gsl_vector_get(S[sv_list[0][0]][sv_list[0][1]],
-        sv_list[0][2]) * dim[sv_list[0][0]] * dim[sv_list[0][1]];
+                                 sv_list[0][2]) *
+                                     dim[sv_list[0][0]] * dim[sv_list[0][1]];
   for (uint8_t n = 0; n < std::min(sv_num, dc); ++n) {
     rho_M = sv_list[n][0];
     rho_N = sv_list[n][1];
@@ -299,17 +305,19 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
     for (uint8_t m = 0; m < msize[rho_M][rho_M]; ++m)
       for (uint8_t p = 0; p < msize[rho_N][rho_N]; ++p)
         for (uint8_t j = 0; j < sv_len[rho_A[rho_M][m]][rho_A[rho_N][p]] *
-            sv_len[rho_B[rho_M][m]][rho_B[rho_N][p]]; ++j) {
+             sv_len[rho_B[rho_M][m]][rho_B[rho_N][p]]; ++j) {
           m_A_val = m_A[j][rho_M][rho_N];
           m_B_val = m_B[j][rho_M][rho_N];
           sv = sqrt(gsl_vector_get(S[rho_M][rho_N], i) *
-              dim[rho_M] * dim[rho_N] / sv_max);
+                    dim[rho_M] * dim[rho_N] / sv_max);
           result[0].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m],
-              rho_A[rho_N][p], m_B_val, rho_B[rho_M][m], rho_B[rho_N][p],
-              sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
+                        rho_A[rho_N][p], m_B_val, rho_B[rho_M][m],
+                        rho_B[rho_N][p],
+                        sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
           result[1].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m],
-              rho_A[rho_N][p], m_B_val, rho_B[rho_M][m], rho_B[rho_N][p],
-              sv * gsl_matrix_get(V[rho_M][rho_N], m, i));;
+                        rho_A[rho_N][p], m_B_val, rho_B[rho_M][m],
+                        rho_B[rho_N][p],
+                        sv * gsl_matrix_get(V[rho_M][rho_N], m, i));;
         }
   }
 
@@ -322,7 +330,7 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
 }
 
 void DoFirstContraction(DTensor14 *C, const DTensor9 &K, const DTensor5 &SU,
-    const DTensor5 &SV) {
+                        const DTensor5 &SV) {
   DTensor9 SUSU;
   // U00, U01, U02, U03+U14, U04, U10, U11, U12, U13
   Contract(&SUSU, SU, 3, SU, 4);
@@ -415,7 +423,7 @@ void DoFirstContraction(DTensor14 *C, const DTensor9 &K, const DTensor5 &SU,
 }
 
 void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
-    const DTensor9 &SV) {
+                       const DTensor9 &SV) {
   DTensor16 SUSU;
   // U00, U01, U02, U04, U05, U06, U07, U08, U10, U11, U12, U13, U14,
   // U15, U17, U18 (U03+U16)
@@ -544,13 +552,14 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11+K12, K10+V02, K13+V12, K18, V00, V10 (U15+K17+V18)
   ContractSelf2(&KKSUSUSVSV11, KKSUSUSVSV10, 9, 12);
+
   rank_t mapping[14] = {4, 11, 12, 0, 9, 5, 1, 6, 7, 2, 8, 13, 3, 10};
   Rearrange(C, KKSUSUSVSV11, mapping);
 }
 
 void TRGS3(const double a, const double b, const double c,
-    const uint8_t dc, const double condi, const unsigned iter,
-    const DTensor9 &K) {
+           const uint8_t dc, const double condi, const unsigned iter,
+           const DTensor9 &K) {
   std::cout << K << std::endl;
   DTensor4 B1;
   MakeFirstBlocks(&B1, a, b, c);
@@ -569,13 +578,14 @@ void TRGS3(const double a, const double b, const double c,
   uint8_t ind[] = {3, 3, 5};
   uint8_t rho_A[3][5] = {{0, 1, 2}, {0, 1, 2}, {0, 2, 2, 1, 2}};
   uint8_t rho_B[3][5] = {{0, 1, 2}, {1, 0, 2}, {2, 0, 2, 2, 1}};
-  uint8_t m_max = 25 * dc * dc;
+  size_t m_max = 25 * dc * dc;
   uint8_t m_A[m_max][3][3];
   uint8_t m_B[m_max][3][3];
   MakeSecondBlocks(&B2, m_A, m_B, &C1, ind, sv_len, rho_A, rho_B, condi);
   std::cout << B2 << std::endl;
 
-  for (unsigned i = 0; i < iter; ++i) {
+  //TODO: make loop terminate when fixed point is reached
+  for (unsigned i = 1; i < iter; ++i) {
     DTensor9 SVD2[2];
     DoLoopSVD(SVD2, sv_len, &B2, dc, condi, rho_A, rho_B, m_A, m_B);
     B2.Clear();
@@ -595,5 +605,5 @@ int main(int argc, char **argv) {
   DTensor9 K;
   Make9j(&K);
 
-  TRGS3(0, 0, 0, 9, 1e-8, 10, K);
+  TRGS3(0, 0, 0, 9, 1e-8, 1, K);
 }
