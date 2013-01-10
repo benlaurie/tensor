@@ -162,6 +162,7 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
           sv_list[sv_num][1] = rho_N;
           sv_list[sv_num][2] = i;
           ++sv_num;
+          ++sv_len[rho_M][rho_N];
         }
     }
   qsort(sv_list, sv_num, sizeof(sv_list[0]), CompareSVs);
@@ -174,7 +175,7 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
   uint8_t i;
   double sv;
   double sv_max = gsl_vector_get(S[sv_list[0][0]][sv_list[0][1]],
-      sv_list[0][2]);
+      sv_list[0][2]) * dim[sv_list[0][0]] * dim[sv_list[0][1]];
   for (uint8_t n = 0; n < std::min(sv_num, dc); ++n) {
     rho_M = sv_list[n][0];
     rho_N = sv_list[n][1];
@@ -187,7 +188,6 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
       result[1].Set(i, rho_M, rho_N, rho_A[rho_M][rho_N][m],
           rho_B[rho_M][rho_N][m], sv * gsl_matrix_get(V[rho_M][rho_N], m, i));
     }
-    ++sv_len[rho_M][rho_N];
   }
   for (uint8_t rho_M = 0; rho_M < 3; ++rho_M)
     for (uint8_t rho_N = 0; rho_N < 3; ++rho_N) {
@@ -354,6 +354,7 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
           sv_list[sv_num][1] = rho_N;
           sv_list[sv_num][2] = i;
           ++sv_num;
+          ++sv_len[rho_M][rho_N];
         }
       }
     }
@@ -361,37 +362,178 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
   uint8_t rho_M;
   uint8_t rho_N;
   uint8_t i;
-  uint8_t j;
   uint8_t m_A_val;
   uint8_t m_B_val;
   double sv;
   double sv_max = gsl_vector_get(S[sv_list[0][0]][sv_list[0][1]],
-      sv_list[0][2]);
+        sv_list[0][2]) * dim[sv_list[0][0]] * dim[sv_list[0][1]];
   for (uint8_t n = 0; n < std::min(sv_num, dc); ++n) {
     rho_M = sv_list[n][0];
     rho_N = sv_list[n][1];
     i = sv_list[n][2];
-    j = sv_len[rho_M][rho_N];
-    m_A_val = m_A->Get(rho_M, rho_N, j);
-    m_B_val = m_B->Get(rho_M, rho_N, j);
-    for (uint8_t m = 0; m < msize[rho_M][rho_N]; ++m) {
-      sv = sqrt(gsl_vector_get(S[rho_M][rho_N], i) * dim[rho_M] * dim[rho_N] /
-          sv_max);
-      result[0].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m], rho_A[rho_N][n],
-          m_B_val, rho_B[rho_M][m], rho_B[rho_N][n],
-          sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
-      result[1].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m], rho_A[rho_N][n],
-          m_B_val, rho_B[rho_M][m], rho_B[rho_N][n],
-          sv * gsl_matrix_get(V[rho_M][rho_N], m, i));
-    }
-    ++sv_len[rho_M][rho_N];
+    for (uint8_t m = 0; m < msize[rho_M][rho_M]; ++m)
+      for (uint8_t p = 0; p < msize[rho_N][rho_N]; ++p)
+        for (uint8_t j = 0; j < sv_len[rho_A[rho_M][m]][rho_A[rho_N][p]] *
+            sv_len[rho_B[rho_M][m]][rho_B[rho_N][p]]; ++j) {
+          m_A_val = m_A->Get(rho_M, rho_N, j);
+          m_B_val = m_B->Get(rho_M, rho_N, j);
+          sv = sqrt(gsl_vector_get(S[rho_M][rho_N], i) *
+              dim[rho_M] * dim[rho_N] / sv_max);
+          result[0].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m],
+              rho_A[rho_N][p], m_B_val, rho_B[rho_M][m], rho_B[rho_N][p],
+              sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
+          result[1].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m],
+              rho_A[rho_N][p], m_B_val, rho_B[rho_M][m], rho_B[rho_N][p],
+              sv * gsl_matrix_get(V[rho_M][rho_N], m, i));;
+        }
   }
+
   for (uint8_t rho_M = 0; rho_M < 3; ++rho_M)
     for (uint8_t rho_N = 0; rho_N < 3; ++rho_N) {
       gsl_matrix_free(U[rho_M][rho_N]);
       gsl_vector_free(S[rho_M][rho_N]);
       gsl_matrix_free(V[rho_M][rho_N]);
     }
+}
+
+void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
+    const DTensor9 &SV) {
+  DTensor16 SUSU;
+  // U00, U01, U02, U04, U05, U06, U07, U08, U10, U11, U12, U13, U14,
+  // U15, U17, U18 (U03+U16)
+  Contract2(&SUSU, SU, 3, SU, 6);
+  DTensor15 SUSU1;
+  // U00, U01, U02, U04+U17, U05, U06, U07, U08, U10, U11, U12, U13, U14,
+  // U15, U18
+  ContractSelf(&SUSU1, SUSU, 3, 14);
+  DTensor14 SUSU2;
+  // U00, U01, U02, U04+U17, U05+U18, U06, U07, U08, U10, U11, U12, U13, U14,
+  // U15
+  ContractSelf(&SUSU2, SUSU1, 4, 14);
+  DTensor22 KSUSU;
+  // K00, K01+U01, K02, K03, K04, K05, K06, K07, K08, U00, U02, U04+U17,
+  // U05+U18, U06, U07, U08, U10, U11, U12, U13, U14, U15
+  Contract(&KSUSU, K, 1, SUSU2, 1);
+  DTensor21 KSUSU1;
+  // K00, K01+U01, K02+U12, K03, K04, K05, K06, K07, K08, U00, U02, U04+U17,
+  // U05+U18, U06, U07, U08, U10, U11, U13, U14, U15
+  ContractSelf(&KSUSU1, KSUSU, 2, 17);
+  DTensor20 KSUSU2;
+  // K00, K01+U01, K02+U12, K03, K04, K05+U07, K06, K07, K08, U00, U02, U04+U17,
+  // U05+U18, U06, U08, U10, U11, U13, U14, U15
+  ContractSelf(&KSUSU2, KSUSU1, 5, 14);
+  DTensor18 KSUSU3;
+  // K00, K01+U01, K02+U12, K03, K04, K05+U07, K07, K08, U00, U02,
+  // U05+U18, U06, U08, U10, U11, U13, U14, U15 (K06+U04+U17)
+  ContractSelf2(&KSUSU3, KSUSU2, 6, 11);
+  DTensor17 KSUSU4;
+  // K00, K01+U01, K02+U12, K03, K04, K05+U07, K07+U14, K08, U00, U02,
+  // U05+U18, U06, U08, U10, U11, U13, U15
+  ContractSelf(&KSUSU4, KSUSU3, 6, 16);
+  DTensor16 SVSV;
+  // V00, V01, V02, V03, V04, V05, V07, V08, V10, V11, V12, V14,
+  // V15, V16, V17, V18 (V06+V13)
+  Contract2(&SVSV, SV, 6, SV, 3);
+  DTensor15 SVSV1;
+  // V00, V01, V02, V03, V04, V05, V07+V14, V08, V10, V11, V12,
+  // V15, V16, V17, V18
+  ContractSelf(&SVSV1, SVSV, 6, 11);
+  DTensor14 SVSV2;
+  // V00, V01, V02, V03, V04, V05, V07+V14, V08+V15, V10, V11, V12,
+  // V16, V17, V18
+  ContractSelf(&SVSV2, SVSV1, 7, 11);
+  DTensor22 KSVSV;
+  // K10+V02, K11, K12, K13, K14, K15, K16, K17, K18, V00, V01, V03, V04, V05,
+  // V07+V14, V08+V15, V10, V11, V12, V16, V17, V18
+  Contract(&KSVSV, K, 0, SVSV2, 2);
+  DTensor21 KSVSV1;
+  // K10+V02, K11, K12, K13+V12, K14, K15, K16, K17, K18, V00, V01, V03,
+  // V04, V05, V07+V14, V08+V15, V10, V11, V16, V17, V18
+  ContractSelf(&KSVSV1, KSVSV, 3, 18);
+  DTensor19 KSVSV2;
+  // K10+V02, K11, K12, K13+V12, K15, K16, K17, K18, V00, V01, V03,
+  // V04, V05, V07+V14, V10, V11, V16, V17, V18 (K14+V08+V15)
+  ContractSelf2(&KSVSV2, KSVSV1, 4, 15);
+  DTensor18 KSVSV3;
+  // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17, K18, V00, V01, V03,
+  // V04, V07+V14, V10, V11, V16, V17, V18
+  ContractSelf(&KSVSV3, KSVSV2, 4, 12);
+  DTensor17 KSVSV4;
+  // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V01, V03,
+  // V04, V07+V14, V10, V11, V16, V17
+  ContractSelf(&KSVSV4, KSVSV3, 6, 17);
+  DTensor33 KKSUSUSVSV;
+  // K00+V01, K01+U01, K02+U12, K03, K04, K05+U07, K07+U14, K08, U00, U02,
+  // U05+U18, U06, U08, U10, U11, U13, U15,
+  // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
+  // V04, V07+V14, V10, V11, V16, V17
+  Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 9);
+  DTensor32 KKSUSUSVSV1;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K04, K05+U07, K07+U14, K08, U00, U02,
+  // U05+U18, U06, U08, U10, U11, U13, U15,
+  // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
+  // V04, V07+V14, V10, V16, V17
+  ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 30);
+  DTensor30 KKSUSUSVSV2;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K05+U07, K07+U14, K08, U00, U02,
+  // U05+U18, U06, U08, U10, U11, U13, U15,
+  // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
+  // V04, V10, V16, V17 (K04+V07+V14)
+  ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 28);
+  DTensor28 KKSUSUSVSV3;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K07+U14, K08, U00, U02,
+  // U05+U18, U06, U08, U10, U11, U13, U15,
+  // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
+  // V10, V16, V17 (K05+U07+V04)
+  ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 26);
+  DTensor26 KKSUSUSVSV4;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02,
+  // U05+U18, U06, U08, U10, U11, U13, U15,
+  // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
+  // V10, V16 (K07+U14+V17)
+  ContractSelf2(&KKSUSUSVSV4, KKSUSUSVSV3, 4, 27);
+  DTensor25 KKSUSUSVSV5;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
+  // U05+U18, U06, U08, U10, U11, U13, U15,
+  // K10+V02, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
+  // V10, V16
+  ContractSelf(&KKSUSUSVSV5, KKSUSUSVSV4, 6, 15);
+  DTensor23 KKSUSUSVSV6;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
+  // U06, U08, U10, U11, U13, U15,
+  // K10+V02, K12, K13+V12, K15+V05, K17+V18, K18, V00, V03,
+  // V10, V16 (U05+U18+K16)
+  ContractSelf2(&KKSUSUSVSV6, KKSUSUSVSV5, 7, 18);
+  DTensor21 KKSUSUSVSV7;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
+  // U08, U10, U11, U13, U15, K10+V02, K12, K13+V12, K15+V05, K17+V18, K18, V00,
+  // V10, V16 (U06+V03)
+  ContractSelf2(&KKSUSUSVSV7, KKSUSUSVSV6, 7, 20);
+  DTensor19 KKSUSUSVSV8;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
+  // U10, U11, U13, U15, K10+V02, K12, K13+V12, K17+V18, K18, V00,
+  // V10, V16 (U08+K15+V05)
+  ContractSelf2(&KKSUSUSVSV8, KKSUSUSVSV7, 7, 15);
+  DTensor18 KKSUSUSVSV9;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
+  // U10, U11+K12, U13, U15, K10+V02, K13+V12, K17+V18, K18, V00, V10, V16
+  ContractSelf(&KKSUSUSVSV9, KKSUSUSVSV8, 8, 12);
+  DTensor16 KKSUSUSVSV10;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
+  // U10, U11+K12, U15, K10+V02, K13+V12, K17+V18, K18, V00, V10 (U13+V16)
+  ContractSelf2(&KKSUSUSVSV10, KKSUSUSVSV9, 9, 17);
+  DTensor14 KKSUSUSVSV11;
+  // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
+  // U10, U11+K12, K10+V02, K13+V12, K18, V00, V10 (U15+K17+V18)
+  ContractSelf2(&KKSUSUSVSV11, KKSUSUSVSV10, 9, 12);
+  rank_t mapping[14] = {4, 11, 12, 0, 9, 5, 1, 6, 7, 2, 8, 13, 3, 10};
+  Rearrange(C, KKSUSUSVSV11, mapping);
+}
+
+void MakeLoopBlocks(DTensor4 *B, DTensor3 *m_A, DTensor3 *m_B,
+    const DTensor14 *C, const uint8_t ind[3], const uint8_t sv_len[3][3],
+    const uint8_t rho_A[3][5], const uint8_t rho_B[3][5], const double condi) {
+  MakeSecondBlocks(B, m_A, m_B, C, ind, sv_len, rho_A, rho_B, condi);
 }
 
 void TRGS3(const double a, const double b, const double c,
@@ -429,6 +571,12 @@ void TRGS3(const double a, const double b, const double c,
     DTensor9 &SV2 = SVD2[1];
     std::cout << SU2 << std::endl;
     std::cout << SV2 << std::endl;
+    DTensor14 C2;
+    DoLoopContraction(&C2, K, SU2, SV2);
+    std::cout << C2 << std::endl;
+    DTensor4 B3;
+    MakeLoopBlocks(&B3, &m_A, &m_B, &C2, ind, sv_len, rho_A, rho_B, condi);
+    std::cout << B3 << std::endl;
   }
 }
 
