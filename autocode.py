@@ -26,21 +26,19 @@ def DTensor(rank):
     Coords(rank)
     print '    return Tensor<' + str(rank) + ', double>::Get(c);'
     print '  }'
-
-    #FIXME: GetGSLMatrix should have rank - 2 "unmatrixed" indices
-    print '  gsl_matrix *GetGSLMatrix(rank_t c1, rank_t c2, rank_t mrow, rank_t mcol,'
-    print '      rank_t mrow_size, rank_t mcol_size) {'
-    print '    // c1 = value of first "unmatrixed" index'
-    print '    // c2 = value of second "unmatrixed" index'
-    print '    // mrow = index to be matrix row'
-    print '    // mcol = index to be matrix column'
-    print '    // mrow_size = number of rows'
-    print '    // mcol_size = number of columns'
-    print '    uint8_t c[2];'
-    print '    c[0] = c1;'
-    print '    c[1] = c2;'
-    print '    return Tensor<' + str(rank) + ', double>::GetGSLMatrix(c, mrow, mcol, mrow_size, mcol_size);'
-    print '  }'
+    
+    if rank > 2:
+        print '  gsl_matrix *GetGSLMatrix(' + Args(rank - 2) + ', rank_t mrow, rank_t mcol,'
+        print '      rank_t mrow_size, rank_t mcol_size) {'
+        print '    // c0 = value of first "unmatrixed" index'
+        print '    // c1 = value of second "unmatrixed" index'
+        print '    // mrow = index to be matrix row'
+        print '    // mcol = index to be matrix column'
+        print '    // mrow_size = number of rows'
+        print '    // mcol_size = number of columns'
+        Coords(rank - 2)
+        print '    return Tensor<' + str(rank) + ', double>::GetGSLMatrix(c, mrow, mcol, mrow_size, mcol_size);'
+        print '  }'
 
     print '};'
     print
