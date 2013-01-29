@@ -313,14 +313,16 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
           m_B_val = m_B[j][rho_M][rho_N];
           sv = sqrt(gsl_vector_get(S[rho_M][rho_N], i) *
                     dim[rho_M] * dim[rho_N] / sv_max);
-          result[0].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m],
-                        rho_A[rho_N][p], m_B_val, rho_B[rho_M][m],
-                        rho_B[rho_N][p],
-                        sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
-          result[1].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m],
-                        rho_A[rho_N][p], m_B_val, rho_B[rho_M][m],
-                        rho_B[rho_N][p],
-                        sv * gsl_matrix_get(V[rho_M][rho_N], m, i));;
+          if (m < msize[rho_M][rho_N]) {
+            result[0].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m],
+                          rho_A[rho_N][p], m_B_val, rho_B[rho_M][m],
+                          rho_B[rho_N][p],
+                          sv * gsl_matrix_get(U[rho_M][rho_N], m, i));
+            result[1].Set(i, rho_M, rho_N, m_A_val, rho_A[rho_M][m],
+                          rho_A[rho_N][p], m_B_val, rho_B[rho_M][m],
+                          rho_B[rho_N][p],
+                          sv * gsl_matrix_get(V[rho_M][rho_N], m, i));
+          }
         }
   }
 
