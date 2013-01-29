@@ -117,7 +117,8 @@ public:
   void Set(Coordinate<rank> coord, const Value &value) {
     assert(!isinf(value));
     assert(!isnan(value));
-    if (value == 0) {
+    // FIXME: use condi
+    if (value < 1e-12 && value > -1e-12) {
       elements_.erase(coord);
       return;
     }
@@ -229,6 +230,31 @@ void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
     }
   }
 }
+
+/*
+template <rank_t rank, class Value> class AbstractTensor {
+ public:
+  virtual Value Get(const Coordinate<rank> &coord) = 0;
+  virtual AbstractTensorIterator begin()
+};
+
+template <rank_t rank1, rank_t rank2, class Value> class ContractedTensor
+  : public AbstractTensor<rank1 + rank2 - 1> {
+ public:
+  ContractedTensor(AbstractTensor<rank1, Value> &t1, uint8_t d1,
+                   AbstractTensor<rank2, Value> &t2, uint8_t d2)
+      : t1_(t1), t2_(t2), d1_(d1), d2_(d2) {
+    typename std::map<Coordinate<rank2>, Value>::const_iterator i2;
+    for (i2 = t2.elements().begin(); i2 != t2.elements().end(); ++i2)
+        t2map_.insert(std::pair<uint8_t,
+                                const std::pair<const Coordinate<rank2>,
+                                                Value> *>(i2->first.coord(d2),
+                                                          &*i2));
+  }
+  void Go(Tensor<rank1 + rank2 - 1, Value> *t_out) {
+    
+};
+*/
 
 template <rank_t rank1, rank_t rank2, class Value>
 void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,

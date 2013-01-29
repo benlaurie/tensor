@@ -15,3 +15,6 @@ test: test.o
 
 trg-s3: trg-s3.o
 	$(CXX) $(CXXFLAGS) -o trg-s3 trg-s3.o -l gsl -l gslcblas
+
+clean:
+	rm -f *.o test trg-s3 auto_tensor.h
