@@ -427,139 +427,145 @@ void DoFirstContraction(DTensor14 *C, const DTensor9 &K, const DTensor5 &SU,
   Rearrange(C, KKSUSUSVSV7, mapping);
 }
 
+#define V(x) std::cout << #x << std::endl; x
+
 void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
                        const DTensor9 &SV) {
   DTensor16 SUSU;
   // U00, U01, U02, U04, U05, U06, U07, U08, U10, U11, U12, U13, U14,
   // U15, U17, U18 (U03+U16)
-  Contract2(&SUSU, SU, 3, SU, 6);
+  V(Contract2(&SUSU, SU, 3, SU, 6));
   DTensor15 SUSU1;
   // U00, U01, U02, U04+U17, U05, U06, U07, U08, U10, U11, U12, U13, U14,
   // U15, U18
-  ContractSelf(&SUSU1, SUSU, 3, 14);
+  V(ContractSelf(&SUSU1, SUSU, 3, 14));
   DTensor14 SUSU2;
   // U00, U01, U02, U04+U17, U05+U18, U06, U07, U08, U10, U11, U12, U13, U14,
   // U15
-  ContractSelf(&SUSU2, SUSU1, 4, 14);
+  V(ContractSelf(&SUSU2, SUSU1, 4, 14));
   DTensor22 KSUSU;
   // K00, K01+U01, K02, K03, K04, K05, K06, K07, K08, U00, U02, U04+U17,
   // U05+U18, U06, U07, U08, U10, U11, U12, U13, U14, U15
-  Contract(&KSUSU, K, 1, SUSU2, 1);
+  V(Contract(&KSUSU, K, 1, SUSU2, 1));
   DTensor21 KSUSU1;
   // K00, K01+U01, K02+U12, K03, K04, K05, K06, K07, K08, U00, U02, U04+U17,
   // U05+U18, U06, U07, U08, U10, U11, U13, U14, U15
-  ContractSelf(&KSUSU1, KSUSU, 2, 17);
+  V(ContractSelf(&KSUSU1, KSUSU, 2, 17));
   DTensor20 KSUSU2;
   // K00, K01+U01, K02+U12, K03, K04, K05+U07, K06, K07, K08, U00, U02, U04+U17,
   // U05+U18, U06, U08, U10, U11, U13, U14, U15
-  ContractSelf(&KSUSU2, KSUSU1, 5, 14);
+  V(ContractSelf(&KSUSU2, KSUSU1, 5, 14));
   DTensor18 KSUSU3;
   // K00, K01+U01, K02+U12, K03, K04, K05+U07, K07, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U14, U15 (K06+U04+U17)
-  ContractSelf2(&KSUSU3, KSUSU2, 6, 11);
+  V(ContractSelf2(&KSUSU3, KSUSU2, 6, 11));
   DTensor17 KSUSU4;
   // K00, K01+U01, K02+U12, K03, K04, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15
-  ContractSelf(&KSUSU4, KSUSU3, 6, 16);
+  V(ContractSelf(&KSUSU4, KSUSU3, 6, 16));
   DTensor16 SVSV;
   // V00, V01, V02, V03, V04, V05, V07, V08, V10, V11, V12, V14,
   // V15, V16, V17, V18 (V06+V13)
-  Contract2(&SVSV, SV, 6, SV, 3);
+  V(Contract2(&SVSV, SV, 6, SV, 3));
   DTensor15 SVSV1;
   // V00, V01, V02, V03, V04, V05, V07+V14, V08, V10, V11, V12,
   // V15, V16, V17, V18
-  ContractSelf(&SVSV1, SVSV, 6, 11);
+  V(ContractSelf(&SVSV1, SVSV, 6, 11));
   DTensor14 SVSV2;
   // V00, V01, V02, V03, V04, V05, V07+V14, V08+V15, V10, V11, V12,
   // V16, V17, V18
-  ContractSelf(&SVSV2, SVSV1, 7, 11);
+  V(ContractSelf(&SVSV2, SVSV1, 7, 11));
   DTensor22 KSVSV;
   // K10+V02, K11, K12, K13, K14, K15, K16, K17, K18, V00, V01, V03, V04, V05,
   // V07+V14, V08+V15, V10, V11, V12, V16, V17, V18
-  Contract(&KSVSV, K, 0, SVSV2, 2);
+  V(Contract(&KSVSV, K, 0, SVSV2, 2));
   DTensor21 KSVSV1;
   // K10+V02, K11, K12, K13+V12, K14, K15, K16, K17, K18, V00, V01, V03,
   // V04, V05, V07+V14, V08+V15, V10, V11, V16, V17, V18
-  ContractSelf(&KSVSV1, KSVSV, 3, 18);
+  V(ContractSelf(&KSVSV1, KSVSV, 3, 18));
   DTensor19 KSVSV2;
   // K10+V02, K11, K12, K13+V12, K15, K16, K17, K18, V00, V01, V03,
   // V04, V05, V07+V14, V10, V11, V16, V17, V18 (K14+V08+V15)
-  ContractSelf2(&KSVSV2, KSVSV1, 4, 15);
+  V(ContractSelf2(&KSVSV2, KSVSV1, 4, 15));
   DTensor18 KSVSV3;
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17, K18, V00, V01, V03,
   // V04, V07+V14, V10, V11, V16, V17, V18
-  ContractSelf(&KSVSV3, KSVSV2, 4, 12);
+  V(ContractSelf(&KSVSV3, KSVSV2, 4, 12));
   DTensor17 KSVSV4;
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V01, V03,
   // V04, V07+V14, V10, V11, V16, V17
-  ContractSelf(&KSVSV4, KSVSV3, 6, 17);
+  V(ContractSelf(&KSVSV4, KSVSV3, 6, 17));
   DTensor33 KKSUSUSVSV;
+
+  std::cout << KSUSU4.elements().size() << " x " << KSVSV4.elements().size()
+            << std::endl;
+
   // K00+V01, K01+U01, K02+U12, K03, K04, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V07+V14, V10, V11, V16, V17
-  Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 9);
+  V(Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 9));
   DTensor32 KKSUSUSVSV1;
   // K00+V01, K01+U01, K02+U12, K03+V11, K04, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V07+V14, V10, V16, V17
-  ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 30);
+  V(ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 30));
   DTensor30 KKSUSUSVSV2;
   // K00+V01, K01+U01, K02+U12, K03+V11, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V10, V16, V17 (K04+V07+V14)
-  ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 28);
+  V(ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 28));
   DTensor28 KKSUSUSVSV3;
   // K00+V01, K01+U01, K02+U12, K03+V11, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V10, V16, V17 (K05+U07+V04)
-  ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 26);
+  V(ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 26));
   DTensor26 KKSUSUSVSV4;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V10, V16 (K07+U14+V17)
-  ContractSelf2(&KKSUSUSVSV4, KKSUSUSVSV3, 4, 27);
+  V(ContractSelf2(&KKSUSUSVSV4, KKSUSUSVSV3, 4, 27));
   DTensor25 KKSUSUSVSV5;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V10, V16
-  ContractSelf(&KKSUSUSVSV5, KKSUSUSVSV4, 6, 15);
+  V(ContractSelf(&KKSUSUSVSV5, KKSUSUSVSV4, 6, 15));
   DTensor23 KKSUSUSVSV6;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U06, U08, U10, U11, U13, U15,
   // K10+V02, K12, K13+V12, K15+V05, K17+V18, K18, V00, V03,
   // V10, V16 (U05+U18+K16)
-  ContractSelf2(&KKSUSUSVSV6, KKSUSUSVSV5, 7, 18);
+  V(ContractSelf2(&KKSUSUSVSV6, KKSUSUSVSV5, 7, 18));
   DTensor21 KKSUSUSVSV7;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U08, U10, U11, U13, U15, K10+V02, K12, K13+V12, K15+V05, K17+V18, K18, V00,
   // V10, V16 (U06+V03)
-  ContractSelf2(&KKSUSUSVSV7, KKSUSUSVSV6, 7, 20);
+  V(ContractSelf2(&KKSUSUSVSV7, KKSUSUSVSV6, 7, 20));
   DTensor19 KKSUSUSVSV8;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11, U13, U15, K10+V02, K12, K13+V12, K17+V18, K18, V00,
   // V10, V16 (U08+K15+V05)
-  ContractSelf2(&KKSUSUSVSV8, KKSUSUSVSV7, 7, 15);
+  V(ContractSelf2(&KKSUSUSVSV8, KKSUSUSVSV7, 7, 15));
   DTensor18 KKSUSUSVSV9;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11+K12, U13, U15, K10+V02, K13+V12, K17+V18, K18, V00, V10, V16
-  ContractSelf(&KKSUSUSVSV9, KKSUSUSVSV8, 8, 12);
+  V(ContractSelf(&KKSUSUSVSV9, KKSUSUSVSV8, 8, 12));
   DTensor16 KKSUSUSVSV10;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11+K12, U15, K10+V02, K13+V12, K17+V18, K18, V00, V10 (U13+V16)
-  ContractSelf2(&KKSUSUSVSV10, KKSUSUSVSV9, 9, 17);
+  V(ContractSelf2(&KKSUSUSVSV10, KKSUSUSVSV9, 9, 17));
   DTensor14 KKSUSUSVSV11;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11+K12, K10+V02, K13+V12, K18, V00, V10 (U15+K17+V18)
-  ContractSelf2(&KKSUSUSVSV11, KKSUSUSVSV10, 9, 12);
+  V(ContractSelf2(&KKSUSUSVSV11, KKSUSUSVSV10, 9, 12));
 
   rank_t mapping[14] = {4, 11, 12, 0, 9, 5, 1, 6, 7, 2, 8, 13, 3, 10};
-  Rearrange(C, KKSUSUSVSV11, mapping);
+  V(Rearrange(C, KKSUSUSVSV11, mapping));
 }
 
 void TRGS3(const double a, const double b, const double c,
