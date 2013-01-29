@@ -262,7 +262,8 @@ void DoFirstSVD(DTensor5 result[2], uint8_t sv_len[3][3], DTensor4 *B,
 void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
                const uint8_t dc, const double condi, const uint8_t rho_A[3][5],
                const uint8_t rho_B[3][5], const uint8_t m_A[][3][3],
-               const uint8_t m_B[][3][3], const uint8_t msize[3][3]) {
+               const uint8_t m_B[][3][3], const uint8_t msize[3][3],
+               const uint8_t ind[3]) {
   uint8_t sv_list[9*dc][3];
   uint8_t sv_num = 0;
   gsl_matrix *U[3][3];
@@ -304,8 +305,8 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
     rho_M = sv_list[n][0];
     rho_N = sv_list[n][1];
     i = sv_list[n][2];
-    for (uint8_t m = 0; m < msize[rho_M][rho_N]; ++m)
-      for (uint8_t p = 0; p < msize[rho_M][rho_N]; ++p)
+    for (uint8_t m = 0; m < ind[rho_M]; ++m)
+      for (uint8_t p = 0; p < ind[rho_N]; ++p)
         for (uint8_t j = 0; j < sv_len[rho_A[rho_M][m]][rho_A[rho_N][p]] *
              sv_len[rho_B[rho_M][m]][rho_B[rho_N][p]]; ++j) {
           m_A_val = m_A[j][rho_M][rho_N];
@@ -590,7 +591,7 @@ void TRGS3(const double a, const double b, const double c,
   //TODO: make loop terminate when fixed point is reached
   for (unsigned i = 1; i < iter; ++i) {
     DTensor9 SVD2[2];
-    DoLoopSVD(SVD2, sv_len, &B2, dc, condi, rho_A, rho_B, m_A, m_B, msize);
+    DoLoopSVD(SVD2, sv_len, &B2, dc, condi, rho_A, rho_B, m_A, m_B, msize, ind);
     B2.Clear();
     DTensor9 &SU2 = SVD2[0];
     DTensor9 &SV2 = SVD2[1];
