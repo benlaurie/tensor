@@ -154,8 +154,10 @@ public:
     return elements_;
   }
 
-  gsl_matrix *GetGSLMatrix(uint8_t coords[rank - 2], uint8_t mrow, uint8_t mcol,
+  gsl_matrix *GetGSLMatrix(uint8_t coords[rank > 1 ? rank - 2 : 1],
+                           uint8_t mrow, uint8_t mcol,
                            uint8_t mrow_size, uint8_t mcol_size) const {
+    assert(rank > 1);
     gsl_matrix *M = gsl_matrix_calloc(mrow_size, mcol_size);
     uint8_t full_coords[rank];
     uint8_t d = 0;
