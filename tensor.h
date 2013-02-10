@@ -422,7 +422,7 @@ template <class Tensor1> class SelfContractedTensor {
 
     // prefix ++
     Iterator &operator++() {
-      Inc();
+      ++i_;
       Next();
       return *this;
     }
@@ -437,13 +437,10 @@ template <class Tensor1> class SelfContractedTensor {
     }
 
    private:
-    void Inc() {
-      ++i_;
-    }
     void Next() {
       while(i_ != t_->t_->end()
             && i_->first[t_->d1_] != i_->first[t_->d2_])
-        Inc();
+        ++i_;
     }
 
     void SetValue() {
