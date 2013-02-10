@@ -268,14 +268,6 @@ void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
   }
 }
 
-/*
-template <rank_t rank, class Value> class AbstractTensor {
- public:
-  virtual Value Get(const Coordinate<rank> &coord) = 0;
-  virtual AbstractTensorIterator begin()
-};
-*/
-
 template <rank_t rank1, rank_t rank2, class Value> class ContractedTensor {
  public:
   ContractedTensor(const Tensor<rank1, Value> *t1, uint8_t d1,
@@ -431,6 +423,26 @@ void ContractSelf(Tensor<rank - 1, Value> *t_out,
   for (i1 = t_in.elements().begin(); i1 != t_in.elements().end(); ++i1) {
     if (i1->first.coord(d1) == i1->first.coord(d2)) {
       Coordinate<rank - 1> new_coord;
+      new_coord.Set(0, i1->first.except(d));
+      t_out->Set(new_coord, i1->second);
+    }
+  }
+}
+
+template <rank_t rank1, rank_t rank2, class Value>
+void ContractSelf(Tensor<rank1 + rank2 - 2, Value> *t_out,
+                  const ContractedTensor<rank1, rank2, Value> &t_in,
+                  uint8_t d1, uint8_t d2) {
+  uint8_t d;
+  if (d1 < d2)
+    d = d2;
+  else
+    d = d1;
+
+  typename ContractedTensor<rank1, rank2, Value>::Iterator i1;
+  for (i1 = t_in.begin(); i1 != t_in.end(); ++i1) {
+    if (i1->first.coord(d1) == i1->first.coord(d2)) {
+      Coordinate<rank1 + rank2 - 2> new_coord;
       new_coord.Set(0, i1->first.except(d));
       t_out->Set(new_coord, i1->second);
     }
