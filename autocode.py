@@ -22,6 +22,10 @@ def DTensor(rank):
     print '    Tensor<' + str(rank) + ', double>::Set(c, value);'
     print '  }'
 
+    print '  void Set(Coordinate<' + str(rank) + '> c, const double &value) {'
+    print '    Tensor<' + str(rank) + ', double>::Set(c, value);'
+    print '  }'
+
     print '  const double &Get(' + Args(rank) + ') const {'
     Coords(rank)
     print '    return Tensor<' + str(rank) + ', double>::Get(c);'

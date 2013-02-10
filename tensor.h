@@ -124,6 +124,8 @@ std::ostream &operator<<(std::ostream &out,
 template <rank_t rank, class Value> class Tensor {
 public:
   typedef std::pair<Coordinate<rank>, Value> EPair;
+  typedef typename std::map<Coordinate<rank>, Value>::const_iterator Iterator;
+  static const rank_t Rank = rank;
 
   Tensor() {}
 
@@ -270,6 +272,8 @@ void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
 
 template <rank_t rank1, rank_t rank2, class Value> class ContractedTensor {
  public:
+  static const rank_t Rank = rank1 + rank2 - 1;
+
   ContractedTensor(const Tensor<rank1, Value> *t1, uint8_t d1,
                    const Tensor<rank2, Value> *t2, uint8_t d2)
       : t1_(t1), t2_(t2), d1_(d1), d2_(d2) {
@@ -410,28 +414,8 @@ void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
   }
 }
 
-template <rank_t rank, class Value>
-void ContractSelf(Tensor<rank - 1, Value> *t_out,
-                  const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
-  uint8_t d;
-  if (d1 < d2)
-    d = d2;
-  else
-    d = d1;
-
-  typename std::map<Coordinate<rank>, Value>::const_iterator i1;
-  for (i1 = t_in.elements().begin(); i1 != t_in.elements().end(); ++i1) {
-    if (i1->first.coord(d1) == i1->first.coord(d2)) {
-      Coordinate<rank - 1> new_coord;
-      new_coord.Set(0, i1->first.except(d));
-      t_out->Set(new_coord, i1->second);
-    }
-  }
-}
-
-template <rank_t rank1, rank_t rank2, class Value>
-void ContractSelf(Tensor<rank1 + rank2 - 2, Value> *t_out,
-                  const ContractedTensor<rank1, rank2, Value> &t_in,
+template <class OutTensor, class InTensor>
+void ContractSelf(OutTensor *t_out, const InTensor &t_in,
                   uint8_t d1, uint8_t d2) {
   uint8_t d;
   if (d1 < d2)
@@ -439,10 +423,10 @@ void ContractSelf(Tensor<rank1 + rank2 - 2, Value> *t_out,
   else
     d = d1;
 
-  typename ContractedTensor<rank1, rank2, Value>::Iterator i1;
+  typename InTensor::Iterator i1;
   for (i1 = t_in.begin(); i1 != t_in.end(); ++i1) {
     if (i1->first.coord(d1) == i1->first.coord(d2)) {
-      Coordinate<rank1 + rank2 - 2> new_coord;
+      Coordinate<InTensor::Rank - 1> new_coord;
       new_coord.Set(0, i1->first.except(d));
       t_out->Set(new_coord, i1->second);
     }
