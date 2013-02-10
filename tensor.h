@@ -125,6 +125,7 @@ template <rank_t rank, class Value> class Tensor {
 public:
   typedef std::pair<Coordinate<rank>, Value> EPair;
   typedef typename std::map<Coordinate<rank>, Value>::const_iterator Iterator;
+  typedef Value ValueType;
   static const rank_t Rank = rank;
 
   Tensor() {}
@@ -270,23 +271,25 @@ void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
   }
 }
 
-template <rank_t rank1, rank_t rank2, class Value> class ContractedTensor {
+template <class Tensor1, class Tensor2> class ContractedTensor {
  public:
-  static const rank_t Rank = rank1 + rank2 - 1;
+  static const rank_t Rank = Tensor1::Rank + Tensor2::Rank - 1;
+  typedef typename Tensor1::ValueType ValueType;
 
-  ContractedTensor(const Tensor<rank1, Value> *t1, uint8_t d1,
-                   const Tensor<rank2, Value> *t2, uint8_t d2)
+  ContractedTensor(const Tensor1 *t1, uint8_t d1,
+                   const Tensor2 *t2, uint8_t d2)
       : t1_(t1), t2_(t2), d1_(d1), d2_(d2) {
   }
 
-  const Value Get(const uint8_t coords[rank1 + rank2 - 1]) const {
-    Coordinate<rank1> c1(coords);
+  const ValueType Get(const uint8_t coords[Rank]) const {
+    Coordinate<Tensor1::Rank> c1(coords);
     uint8_t r1 = c1[d1_];
-    Coordinate<rank2> c2(&coords[rank1], d2_, r1, &coords[rank1 + d2_]);
+    Coordinate<Tensor2::Rank> c2(&coords[Tensor1::Rank], d2_, r1,
+                                 &coords[Tensor1::Rank + d2_]);
     return t1_->Get(c1) * t2_->Get(c2);
   }
 
-  const Value Get(const Coordinate<rank1 + rank2 - 1> &coords) const {
+  const ValueType Get(const Coordinate<Rank> &coords) const {
     return Get(coords.coords());
   }
 
@@ -298,12 +301,12 @@ template <rank_t rank1, rank_t rank2, class Value> class ContractedTensor {
       Next();
     }
 
-    std::pair<Coordinate<rank1 + rank2 - 1>, Value> &operator*() {
+    std::pair<Coordinate<Rank>, ValueType> &operator*() {
       SetValue();
       return val_;
     }
 
-    std::pair<Coordinate<rank1 + rank2 - 1>, Value> *operator->() {
+    std::pair<Coordinate<Rank>, ValueType> *operator->() {
       SetValue();
       return &val_;
     }
@@ -345,9 +348,9 @@ template <rank_t rank1, rank_t rank2, class Value> class ContractedTensor {
     }
 
     const ContractedTensor *t_;
-    typename std::map<Coordinate<rank1>, Value>::const_iterator i1_;
-    typename std::map<Coordinate<rank2>, Value>::const_iterator i2_;
-    std::pair<Coordinate<rank1 + rank2 - 1>, Value> val_;
+    typename Tensor1::Iterator i1_;
+    typename Tensor2::Iterator i2_;
+    std::pair<Coordinate<Rank>, ValueType> val_;
   };
 
   Iterator begin() const {
@@ -360,11 +363,11 @@ template <rank_t rank1, rank_t rank2, class Value> class ContractedTensor {
     return i;
   }
 
-  bool operator==(const Tensor<rank1 + rank2 - 1, Value> &other) const {
+  bool operator==(const Tensor<Rank, ValueType> &other) const {
     for (Iterator i = begin(); i != end(); ++i)
       if (i->second != other.Get(i->first))
         return false;
-    typename std::map<Coordinate<rank1 + rank2 - 1>, Value>::const_iterator o;
+    typename Tensor<Rank, ValueType>::Iterator o;
     for (o = other.begin(); o != other.end(); ++o)
       if (o->second != Get(o->first))
         return false;
@@ -378,8 +381,8 @@ template <rank_t rank1, rank_t rank2, class Value> class ContractedTensor {
   }
 
  private:
-  const Tensor<rank1, Value> *t1_;
-  const Tensor<rank2, Value> *t2_;
+  const Tensor1 *t1_;
+  const Tensor2 *t2_;
   uint8_t d1_;
   uint8_t d2_;
 };

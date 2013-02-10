@@ -50,10 +50,10 @@ void TestContract() {
 
   assert(t5 == t6);
 
-  ContractedTensor<3, 3, double> ct7(&t1, 2, &t1, 0);
+  ContractedTensor<DTensor3, DTensor3> ct7(&t1, 2, &t1, 0);
   std::cout << t5 << std::endl;
   //  std::cout << ct7 << std::endl;
-  ContractedTensor<3, 3, double>::Iterator i = ct7.begin();
+  ContractedTensor<DTensor3, DTensor3>::Iterator i = ct7.begin();
   std::cout << (*i).first << ' ' << (*i).second << std::endl;
   ct7.Print(std::cout);
   std::cout << std::endl;

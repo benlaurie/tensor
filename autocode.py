@@ -31,6 +31,10 @@ def DTensor(rank):
     print '    return Tensor<' + str(rank) + ', double>::Get(c);'
     print '  }'
     
+    print '  const double &Get(const Coordinate<' + str(rank) + '> &c) const {'
+    print '    return Tensor<' + str(rank) + ', double>::Get(c);'
+    print '  }'
+
     if rank > 2:
         print '  gsl_matrix *GetGSLMatrix(' + Args(rank - 2) + ', rank_t mrow, rank_t mcol,'
         print '      rank_t mrow_size, rank_t mcol_size) {'
