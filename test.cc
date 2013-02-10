@@ -55,10 +55,14 @@ void TestContract() {
   //  std::cout << ct7 << std::endl;
   ContractedTensor<DTensor3, DTensor3>::Iterator i = ct7.begin();
   std::cout << (*i).first << ' ' << (*i).second << std::endl;
-  ct7.Print(std::cout);
-  std::cout << std::endl;
+  std::cout << ct7 << std::endl;
 
   assert(ct7 == t6);
+
+  SelfContractedTensor<DTensor6> sct8(&t3, 2, 3);
+  std::cout << sct8 << std::endl;
+
+  assert(sct8 == t6);
 }
 
 int main(int argc, char **argv) {

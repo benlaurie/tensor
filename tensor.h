@@ -134,6 +134,8 @@ public:
   Tensor(const Tensor &from);
   Tensor &operator=(const Tensor &rhs);
 
+  // Note that this should override the general-purpose == operator
+  // defined below.
   bool operator==(const Tensor &rhs) const {
     return elements_ == rhs.elements_;
   }
@@ -363,17 +365,6 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
     return i;
   }
 
-  bool operator==(const Tensor<Rank, ValueType> &other) const {
-    for (Iterator i = begin(); i != end(); ++i)
-      if (i->second != other.Get(i->first))
-        return false;
-    typename Tensor<Rank, ValueType>::Iterator o;
-    for (o = other.begin(); o != other.end(); ++o)
-      if (o->second != Get(o->first))
-        return false;
-    return true;
-  }
-
   void Print(std::ostream &os) const {
     for (Iterator i(begin()); i != end(); ++i) {
       os << '[' << i->first << ": " << i->second << ']';
@@ -386,6 +377,126 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
   uint8_t d1_;
   uint8_t d2_;
 };
+
+template <class Tensor1, class Tensor2>
+std::ostream &operator<<(std::ostream &out,
+                         const ContractedTensor<Tensor1, Tensor2> &t) {
+  t.Print(out);
+  return out;
+}
+
+template <class Tensor1> class SelfContractedTensor {
+ public:
+  static const rank_t Rank = Tensor1::Rank - 1;
+  typedef typename Tensor1::ValueType ValueType;
+
+  SelfContractedTensor(const Tensor1 *t, rank_t d1, rank_t d2)
+      : t_(t), d1_(d1), d2_(d2) {
+  }
+
+  const ValueType Get(const uint8_t coords[Rank]) const {
+    Coordinate<Tensor1::Rank> c(coords, d2_, coords[d1_], &coords[d2_]);
+    return t_->Get(c);
+  }
+
+  const ValueType Get(const Coordinate<Rank> &coords) const {
+    return Get(coords.coords());
+  }
+
+  class Iterator {
+   public:
+    Iterator() {}
+    Iterator(const SelfContractedTensor *t) : t_(t), i_(t->t_->begin()) {
+      Next();
+    }
+
+    std::pair<Coordinate<Rank>, ValueType> &operator*() {
+      SetValue();
+      return val_;
+    }
+
+    std::pair<Coordinate<Rank>, ValueType> *operator->() {
+      SetValue();
+      return &val_;
+    }
+
+    // prefix ++
+    Iterator &operator++() {
+      Inc();
+      Next();
+      return *this;
+    }
+
+    void End(const SelfContractedTensor *t) {
+      t_ = t;
+      i_ = t_->t_->end();
+    }
+
+    bool operator !=(const Iterator &other) const {
+      return i_ != other.i_;
+    }
+
+   private:
+    void Inc() {
+      ++i_;
+    }
+    void Next() {
+      while(i_ != t_->t_->end()
+            && i_->first[t_->d1_] != i_->first[t_->d2_])
+        Inc();
+    }
+
+    void SetValue() {
+      assert(i_->first[t_->d1_] == i_->first[t_->d2_]);
+      val_.first = i_->first.except(t_->d2_);
+      val_.second = i_->second;
+    }
+
+    const SelfContractedTensor *t_;
+    typename Tensor1::Iterator i_;
+    std::pair<Coordinate<Rank>, ValueType> val_;
+  };
+
+  Iterator begin() const {
+    return Iterator(this);
+  }
+
+  Iterator end() const {
+    Iterator i;
+    i.End(this);
+    return i;
+  }
+
+  void Print(std::ostream &os) const {
+    for (Iterator i(begin()); i != end(); ++i) {
+      os << '[' << i->first << ": " << i->second << ']';
+    }
+  }
+
+ private:
+  const Tensor1 *t_;
+  rank_t d1_;
+  rank_t d2_;
+};
+
+template <class Tensor1>
+std::ostream &operator<<(std::ostream &out,
+                         const SelfContractedTensor<Tensor1> &t) {
+  t.Print(out);
+  return out;
+}
+
+template <class Tensor1, class Tensor2>
+bool operator==(const Tensor1 &t1, const Tensor2 &t2) {
+  for (typename Tensor1::Iterator i = t1.begin(); i != t1.end(); ++i)
+    if (i->second != t2.Get(i->first))
+      return false;
+  typename Tensor2::Iterator o;
+  for (o = t2.begin(); o != t2.end(); ++o)
+    if (o->second != t1.Get(o->first))
+      return false;
+  return true;
+}
 
 template <rank_t rank1, rank_t rank2, class Value>
 void Contract2(Tensor<rank1 + rank2 - 2, Value> *t_out,
