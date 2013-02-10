@@ -114,8 +114,9 @@ private:
   uint8_t coords_[rank];
 };
 
-template <rank_t rank> std::ostream &operator<<(std::ostream &out,
-                                                const Coordinate<rank> &coord) {
+template <rank_t rank>
+std::ostream &operator<<(std::ostream &out,
+                         const Coordinate<rank> &coord) {
   coord.Print(out);
   return out;
 }
