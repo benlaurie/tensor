@@ -617,15 +617,11 @@ class SelfContract2edTensor {
       val_.first = i_->first.except2(t_->d1_, t_->d2_);
       Coordinate<Tensor1::Rank> new_coord = i_->first;
       val_.second = 0;
-      for (uint8_t x = low; x <= high ; ++x) {
+      for (uint8_t x = i_->first[t_->d1_]; x <= high ; ++x) {
         new_coord.Set(t_->d1_, x);
         new_coord.Set(t_->d2_, x);
         ValueType v = t_->t_->Get(new_coord);
-        // Belt and braces, we could instead start at t_->d1_
-        if (x < i_->first[t_->d1_])
-          assert(v == 0.);
-        else
-          val_.second += v;
+        val_.second += v;
       }
     }
 
