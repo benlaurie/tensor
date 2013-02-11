@@ -42,6 +42,11 @@ void TestContract() {
 
   assert(t2 == t4);
 
+  SelfContract2edTensor<DTensor6, 0, 3> sc2t9(&t3, 0, 4);
+  std::cout << sc2t9 << std::endl;
+
+  assert(sc2t9 == t4);
+
   DTensor5 t5;
   Contract(&t5, t1, 2, t1, 0);
 
@@ -63,6 +68,7 @@ void TestContract() {
   std::cout << sct8 << std::endl;
 
   assert(sct8 == t6);
+
 }
 
 int main(int argc, char **argv) {

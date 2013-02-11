@@ -483,15 +483,168 @@ std::ostream &operator<<(std::ostream &out,
   return out;
 }
 
+// We ought to find a better way than low/high
+template <class Tensor1, uint8_t low, uint8_t high>
+class SelfContract2edTensor {
+ public:
+  static const rank_t Rank = Tensor1::Rank - 2;
+  typedef typename Tensor1::ValueType ValueType;
+
+  SelfContract2edTensor(const Tensor1 *t, rank_t d1, rank_t d2)
+      : t_(t), d1_(d1), d2_(d2) {
+    if (d1_ > d2_) {
+      d1_ = d2;
+      d2_ = d1;
+    }
+  }
+
+  void InnerCoord(Coordinate<Tensor1::Rank> *c, const uint8_t coords[Rank],
+                  uint8_t x) const {
+    for (rank_t to = 0, from = 0; to < Tensor1::Rank; ++to)
+      if (to == d1_)
+        c->Set(to, x);
+      else if (to == d2_)
+        c->Set(to, x);
+      else
+        c->Set(to, coords[from++]);
+  } 
+
+  const ValueType Get(const uint8_t coords[Rank]) const {
+    ValueType ret = 0;
+    for (uint8_t x = low; x <= high; ++x) {
+      Coordinate<Tensor1::Rank> c;
+      InnerCoord(&c, coords, x);
+      ret += t_->Get(c);
+    }
+    return ret;
+  }
+
+  const ValueType Get(const Coordinate<Rank> &coords) const {
+    return Get(coords.coords());
+  }
+
+  class Iterator {
+   public:
+    Iterator() {}
+    Iterator(const SelfContract2edTensor *t) : t_(t), i_(t->t_->begin()) {
+      Next();
+    }
+
+    std::pair<Coordinate<Rank>, ValueType> &operator*() {
+      SetValue();
+      return val_;
+    }
+
+    std::pair<Coordinate<Rank>, ValueType> *operator->() {
+      SetValue();
+      return &val_;
+    }
+
+    // prefix ++
+    Iterator &operator++() {
+      ++i_;
+      Next();
+      return *this;
+    }
+
+    void End(const SelfContract2edTensor *t) {
+      t_ = t;
+      i_ = t_->t_->end();
+    }
+
+    bool operator !=(const Iterator &other) const {
+      return i_ != other.i_;
+    }
+
+   private:
+    void Next() {
+      typename Tensor1::Iterator end = t_->t_->end();
+      for ( ; i_ != end; ++i_) {
+        while(i_ != end&& i_->first[t_->d1_] != i_->first[t_->d2_])
+          ++i_;
+        if (i_ == end)
+          break;
+        if (i_->second != 0.) {
+          Coordinate<Tensor1::Rank> new_coord = i_->first;
+          for (uint8_t x = low; x < i_->first[t_->d1_] ; ++x) {
+            new_coord.Set(t_->d1_, x);
+            new_coord.Set(t_->d2_, x);
+            if (t_->t_->Get(new_coord) != 0.)
+              goto again;
+            break;
+          }
+        again:
+          continue;
+        }
+      }
+    }
+
+    void SetValue() {
+      assert(i_->first[t_->d1_] == i_->first[t_->d2_]);
+      val_.first = i_->first.except2(t_->d1_, t_->d2_);
+      Coordinate<Tensor1::Rank> new_coord = i_->first;
+      val_.second = 0;
+      for (uint8_t x = low; x <= high ; ++x) {
+        new_coord.Set(t_->d1_, x);
+        new_coord.Set(t_->d2_, x);
+        ValueType v = t_->t_->Get(new_coord);
+        // Belt and braces, we could instead start at t_->d1_
+        if (x < i_->first[t_->d1_])
+          assert(v == 0.);
+        else
+          val_.second += v;
+      }
+    }
+
+    const SelfContract2edTensor *t_;
+    typename Tensor1::Iterator i_;
+    std::pair<Coordinate<Rank>, ValueType> val_;
+  };
+
+  Iterator begin() const {
+    return Iterator(this);
+  }
+
+  Iterator end() const {
+    Iterator i;
+    i.End(this);
+    return i;
+  }
+
+  void Print(std::ostream &os) const {
+    for (Iterator i(begin()); i != end(); ++i) {
+      os << '[' << i->first << ": " << i->second << ']';
+    }
+  }
+
+ private:
+  const Tensor1 *t_;
+  rank_t d1_;
+  rank_t d2_;
+};
+
+template <class Tensor1, uint8_t low, uint8_t high>
+std::ostream &operator<<(std::ostream &out,
+                         const SelfContract2edTensor<Tensor1, low, high> &t) {
+  t.Print(out);
+  return out;
+}
+
 template <class Tensor1, class Tensor2>
 bool operator==(const Tensor1 &t1, const Tensor2 &t2) {
   for (typename Tensor1::Iterator i = t1.begin(); i != t1.end(); ++i)
-    if (i->second != t2.Get(i->first))
+    if (i->second != t2.Get(i->first)) {
+      std::cout << "one: " << i->first << ' ' << i->second << " != "
+                << t2.Get(i->first) << std::endl;
       return false;
+    }
   typename Tensor2::Iterator o;
   for (o = t2.begin(); o != t2.end(); ++o)
-    if (o->second != t1.Get(o->first))
+    if (o->second != t1.Get(o->first)) {
+      std::cout << "two: " << o->first << ' ' << o->second << " != "
+                << t1.Get(o->first) << std::endl;
       return false;
+    }
   return true;
 }
 
@@ -544,14 +697,19 @@ void ContractSelf(OutTensor *t_out, const InTensor &t_in,
   }
 }
 
-template <rank_t rank, class Value>
-void ContractSelf2(Tensor<rank - 2, Value> *t_out,
-                   const Tensor<rank, Value> &t_in, uint8_t d1, uint8_t d2) {
-  typename std::map<Coordinate<rank>, Value>::const_iterator i1;
-  for (i1 = t_in.elements().begin(); i1 != t_in.elements().end(); ++i1) {
+template <class OutTensor, class InTensor>
+void ContractSelf2(OutTensor *t_out,
+                   const InTensor &t_in, uint8_t d1, uint8_t d2) {
+  int n = 0;
+  typename InTensor::Iterator i1;
+  for (i1 = t_in.begin(); i1 != t_in.end(); ++i1) {
     if (i1->first.coord(d1) == i1->first.coord(d2)) {
-      Coordinate<rank - 2> new_coord;
+      Coordinate<InTensor::Rank - 2> new_coord;
       new_coord.Set(0, i1->first.except2(d1, d2));
+      if (++n == 1000000) {
+        n = 0;
+        std::cout << new_coord << std::endl;
+      }
       t_out->Set(new_coord, t_out->Get(new_coord) + i1->second);
     }
   }

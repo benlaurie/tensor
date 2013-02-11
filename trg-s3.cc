@@ -506,12 +506,15 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   //V(Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 9));
   ContractedTensor<DTensor17, DTensor17> KKSUSUSVSV(&KSUSU4, 0, &KSVSV4, 9);
 
-  DTensor32 KKSUSUSVSV1;
+  //DTensor32 KKSUSUSVSV1;
   // K00+V01, K01+U01, K02+U12, K03+V11, K04, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V07+V14, V10, V16, V17
-  V(ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 30));
+  //V(ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 30));
+  SelfContractedTensor<ContractedTensor<DTensor17, DTensor17> >
+    KKSUSUSVSV1(&KKSUSUSVSV, 3, 30);
+
   DTensor30 KKSUSUSVSV2;
   // K00+V01, K01+U01, K02+U12, K03+V11, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
