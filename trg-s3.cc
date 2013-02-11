@@ -529,12 +529,14 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
 
   //std::cout << "KKSUSUSVSV2 = " << KKSUSUSVSV2 << std::endl;
 
-  DTensor28 KKSUSUSVSV3;
+  //DTensor28 KKSUSUSVSV3;
   // K00+V01, K01+U01, K02+U12, K03+V11, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V10, V16, V17 (K05+U07+V04)
-  V(ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 26));
+  //V(ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 26));
+  SelfContract2edTensor<SelfContract2edTensor<SelfContractedTensor<ContractedTensor<DTensor17, DTensor17> >, 0, 3>, 0, 3> KKSUSUSVSV3(&KKSUSUSVSV2, 4, 26);
+
   DTensor26 KKSUSUSVSV4;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,

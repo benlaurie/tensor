@@ -580,6 +580,10 @@ class SelfContract2edTensor {
       return i_ != other.i_;
     }
 
+    bool operator ==(const Iterator &other) const {
+      return i_ == other.i_;
+    }
+
    private:
     void Next() {
       set_ = false;
