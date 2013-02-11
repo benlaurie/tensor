@@ -28,8 +28,8 @@ public:
   }
 
   Coordinate() {
-    for (rank_t d = 0; d < rank; ++d)
-      coords_[d] = 0xff;
+    //for (rank_t d = 0; d < rank; ++d)
+    //  coords_[d] = 0xff;
   }
 
   bool operator<(const Coordinate &other) const {
@@ -355,6 +355,7 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
       set_ = true;
 
       assert(i1_->first[t_->d1_] == i2_->first[t_->d2_]);
+
       val_.first.Set(i1_->first, i2_->first.except(t_->d2_));
       val_.second = i1_->second * i2_->second;
     }
@@ -733,12 +734,12 @@ void ContractSelf2(OutTensor *t_out,
   typename InTensor::Iterator i1;
   for (i1 = t_in.begin(); i1 != t_in.end(); ++i1) {
     if (i1->first.coord(d1) == i1->first.coord(d2)) {
-      Coordinate<InTensor::Rank - 2> new_coord;
-      new_coord.Set(0, i1->first.except2(d1, d2));
       if (++n == 1000000) {
         n = 0;
-        std::cout << new_coord << std::endl;
+        std::cout << i1->first << std::endl;
       }
+      Coordinate<InTensor::Rank - 2> new_coord;
+      new_coord.Set(0, i1->first.except2(d1, d2));
       t_out->Set(new_coord, t_out->Get(new_coord) + i1->second);
     }
   }
