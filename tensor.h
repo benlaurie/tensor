@@ -324,10 +324,15 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
       t_ = t;
       i1_ = t_->t1_->end();
       i2_ = t_->t2_->begin();
+      set_ = false;
     }
 
     bool operator !=(const Iterator &other) const {
       return i1_ != other.i1_ || i2_ != other.i2_;
+    }
+
+    bool operator ==(const Iterator &other) const {
+      return !(*this != other);
     }
 
    private:
@@ -338,12 +343,17 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
       }
     }
     void Next() {
+      set_ = false;
       while(i1_ != t_->t1_->end()
             && i1_->first[t_->d1_] != i2_->first[t_->d2_])
         Inc();
     }
 
     void SetValue() {
+      if (set_)
+        return;
+      set_ = true;
+
       assert(i1_->first[t_->d1_] == i2_->first[t_->d2_]);
       val_.first.Set(i1_->first, i2_->first.except(t_->d2_));
       val_.second = i1_->second * i2_->second;
@@ -353,6 +363,7 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
     typename Tensor1::Iterator i1_;
     typename Tensor2::Iterator i2_;
     std::pair<Coordinate<Rank>, ValueType> val_;
+    bool set_;
   };
 
   Iterator begin() const {
@@ -430,20 +441,30 @@ template <class Tensor1> class SelfContractedTensor {
     void End(const SelfContractedTensor *t) {
       t_ = t;
       i_ = t_->t_->end();
+      set_ = false;
     }
 
     bool operator !=(const Iterator &other) const {
       return i_ != other.i_;
     }
 
+    bool operator ==(const Iterator &other) const {
+      return i_ == other.i_;
+    }
+
    private:
     void Next() {
+      set_ = false;
       while(i_ != t_->t_->end()
             && i_->first[t_->d1_] != i_->first[t_->d2_])
         ++i_;
     }
 
     void SetValue() {
+      if (set_)
+        return;
+      set_ = true;
+
       assert(i_->first[t_->d1_] == i_->first[t_->d2_]);
       val_.first = i_->first.except(t_->d2_);
       val_.second = i_->second;
@@ -452,6 +473,7 @@ template <class Tensor1> class SelfContractedTensor {
     const SelfContractedTensor *t_;
     typename Tensor1::Iterator i_;
     std::pair<Coordinate<Rank>, ValueType> val_;
+    bool set_;
   };
 
   Iterator begin() const {
@@ -530,12 +552,12 @@ class SelfContract2edTensor {
       Next();
     }
 
-    std::pair<Coordinate<Rank>, ValueType> &operator*() {
+    const std::pair<Coordinate<Rank>, ValueType> &operator*() {
       SetValue();
       return val_;
     }
 
-    std::pair<Coordinate<Rank>, ValueType> *operator->() {
+    const std::pair<Coordinate<Rank>, ValueType> *operator->() {
       SetValue();
       return &val_;
     }
@@ -550,6 +572,7 @@ class SelfContract2edTensor {
     void End(const SelfContract2edTensor *t) {
       t_ = t;
       i_ = t_->t_->end();
+      set_ = false;
     }
 
     bool operator !=(const Iterator &other) const {
@@ -558,9 +581,10 @@ class SelfContract2edTensor {
 
    private:
     void Next() {
+      set_ = false;
       typename Tensor1::Iterator end = t_->t_->end();
       for ( ; i_ != end; ++i_) {
-        while(i_ != end&& i_->first[t_->d1_] != i_->first[t_->d2_])
+        while(i_ != end && i_->first[t_->d1_] != i_->first[t_->d2_])
           ++i_;
         if (i_ == end)
           break;
@@ -571,8 +595,8 @@ class SelfContract2edTensor {
             new_coord.Set(t_->d2_, x);
             if (t_->t_->Get(new_coord) != 0.)
               goto again;
-            break;
           }
+          break;
         again:
           continue;
         }
@@ -580,6 +604,10 @@ class SelfContract2edTensor {
     }
 
     void SetValue() {
+      if (set_)
+        return;
+      set_ = true;
+
       assert(i_->first[t_->d1_] == i_->first[t_->d2_]);
       val_.first = i_->first.except2(t_->d1_, t_->d2_);
       Coordinate<Tensor1::Rank> new_coord = i_->first;
@@ -599,6 +627,7 @@ class SelfContract2edTensor {
     const SelfContract2edTensor *t_;
     typename Tensor1::Iterator i_;
     std::pair<Coordinate<Rank>, ValueType> val_;
+    bool set_;
   };
 
   Iterator begin() const {
