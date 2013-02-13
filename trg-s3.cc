@@ -270,6 +270,8 @@ void DoLoopSVD(DTensor9 result[2], uint8_t sv_len[3][3], DTensor4 *B,
   gsl_matrix *U[3][3];
   gsl_matrix *V[3][3];
 
+  std::cout << "B = " << *B << std::endl;
+
   for (uint8_t rho_M = 0; rho_M < 3; ++rho_M)
     for (uint8_t rho_N = 0; rho_N < 3; ++rho_N) {
       sv_len[rho_M][rho_N] = 0;
@@ -496,34 +498,46 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V01, V03,
   // V04, V07+V14, V10, V11, V16, V17
   V(ContractSelf(&KSVSV4, KSVSV3, 6, 17));
-  DTensor33 KKSUSUSVSV;
-
   std::cout << KSUSU4.elements().size() << " x " << KSVSV4.elements().size()
             << std::endl;
 
+  //DTensor33 KKSUSUSVSV;
   // K00+V01, K01+U01, K02+U12, K03, K04, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V07+V14, V10, V11, V16, V17
-  V(Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 9));
-  DTensor32 KKSUSUSVSV1;
+  //V(Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 9));
+  ContractedTensor<DTensor17, DTensor17> KKSUSUSVSV(&KSUSU4, 0, &KSVSV4, 9);
+
+  //DTensor32 KKSUSUSVSV1;
   // K00+V01, K01+U01, K02+U12, K03+V11, K04, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V07+V14, V10, V16, V17
-  V(ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 30));
-  DTensor30 KKSUSUSVSV2;
+  //V(ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 30));
+  SelfContractedTensor<ContractedTensor<DTensor17, DTensor17> >
+    KKSUSUSVSV1(&KKSUSUSVSV, 3, 30);
+ 
+  //std::cout << "KKSUSUSVSV1 = " << KKSUSUSVSV1 << std::endl;
+
+  //DTensor30 KKSUSUSVSV2;
   // K00+V01, K01+U01, K02+U12, K03+V11, K05+U07, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V10, V16, V17 (K04+V07+V14)
-  V(ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 28));
-  DTensor28 KKSUSUSVSV3;
+  //V(ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 28));
+  SelfContract2edTensor<SelfContractedTensor<ContractedTensor<DTensor17, DTensor17> >, 0, 3> KKSUSUSVSV2(&KKSUSUSVSV1, 4, 28);
+
+  //std::cout << "KKSUSUSVSV2 = " << KKSUSUSVSV2 << std::endl;
+
+  //DTensor28 KKSUSUSVSV3;
   // K00+V01, K01+U01, K02+U12, K03+V11, K07+U14, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V10, V16, V17 (K05+U07+V04)
-  V(ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 26));
+  //V(ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 26));
+  SelfContract2edTensor<SelfContract2edTensor<SelfContractedTensor<ContractedTensor<DTensor17, DTensor17> >, 0, 3>, 0, 3> KKSUSUSVSV3(&KKSUSUSVSV2, 4, 26);
+
   DTensor26 KKSUSUSVSV4;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02,
   // U05+U18, U06, U08, U10, U11, U13, U15,
@@ -608,7 +622,7 @@ void TRGS3(const double a, const double b, const double c,
     std::cout << SV2 << std::endl;
     DTensor14 C2;
     DoLoopContraction(&C2, K, SU2, SV2);
-    std::cout << C2 << std::endl;
+    std::cout << "C2 =" << C2 << std::endl;
     MakeLoopBlocks(&B2, m_A, m_B, &C2, ind, sv_len, rho_A, rho_B, condi, msize);
     std::cout << B2 << std::endl;
   }

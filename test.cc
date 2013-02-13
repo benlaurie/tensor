@@ -42,6 +42,11 @@ void TestContract() {
 
   assert(t2 == t4);
 
+  SelfContract2edTensor<DTensor6, 0, 3> sc2t9(&t3, 0, 4);
+  std::cout << sc2t9 << std::endl;
+
+  assert(sc2t9 == t4);
+
   DTensor5 t5;
   Contract(&t5, t1, 2, t1, 0);
 
@@ -49,6 +54,20 @@ void TestContract() {
   ContractSelf(&t6, t3, 2, 3);
 
   assert(t5 == t6);
+  
+  ContractedTensor<DTensor3, DTensor3> ct7(&t1, 2, &t1, 0);
+  std::cout << t5 << std::endl;
+  //  std::cout << ct7 << std::endl;
+  ContractedTensor<DTensor3, DTensor3>::Iterator i = ct7.begin();
+  std::cout << (*i).first << ' ' << (*i).second << std::endl;
+  std::cout << ct7 << std::endl;
+
+  assert(ct7 == t6);
+
+  SelfContractedTensor<DTensor6> sct8(&t3, 2, 3);
+  std::cout << sct8 << std::endl;
+
+  assert(sct8 == t6);
 
   DTensor3 t7;
   RandomFill(&t7, 3, 5);
