@@ -149,7 +149,7 @@ public:
     assert(!isinf(value));
     assert(!isnan(value));
     // FIXME: use condi
-    if (value < 1e-12 && value > -1e-12) {
+    if (fabs(value) < 1e-12) {
       elements_.erase(coord);
       return;
     }
