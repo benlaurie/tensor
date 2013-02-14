@@ -45,7 +45,7 @@ void TestContract() {
   SelfContract2edTensor<DTensor6, 0, 3> sc2t9(&t3, 0, 4);
   std::cout << sc2t9 << std::endl;
 
-  assert(sc2t9 == t4);
+  assert(EqualTensors(sc2t9,  t4));
 
   DTensor5 t5;
   Contract(&t5, t1, 2, t1, 0);
@@ -62,12 +62,12 @@ void TestContract() {
   std::cout << (*i).first << ' ' << (*i).second << std::endl;
   std::cout << ct7 << std::endl;
 
-  assert(ct7 == t6);
+  assert(EqualTensors(ct7, t6));
 
   SelfContractedTensor<DTensor6> sct8(&t3, 2, 3);
   std::cout << sct8 << std::endl;
 
-  assert(sct8 == t6);
+  assert(EqualTensors(sct8, t6));
 
 }
 

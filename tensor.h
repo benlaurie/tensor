@@ -661,7 +661,7 @@ std::ostream &operator<<(std::ostream &out,
 }
 
 template <class Tensor1, class Tensor2>
-bool operator==(const Tensor1 &t1, const Tensor2 &t2) {
+bool EqualTensors(const Tensor1 &t1, const Tensor2 &t2) {
   for (typename Tensor1::Iterator i = t1.begin(); i != t1.end(); ++i)
     if (i->second != t2.Get(i->first)) {
       std::cout << "one: " << i->first << ' ' << i->second << " != "
