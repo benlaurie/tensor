@@ -38,8 +38,7 @@ def DTensor(rank):
     if rank > 2:
         print '  gsl_matrix *GetGSLMatrix(' + Args(rank - 2) + ', rank_t mrow, rank_t mcol,'
         print '      rank_t mrow_size, rank_t mcol_size) {'
-        print '    // c0 = value of first "unmatrixed" index'
-        print '    // c1 = value of second "unmatrixed" index'
+        print '    // cn = value of nth "unmatrixed" index'
         print '    // mrow = index to be matrix row'
         print '    // mcol = index to be matrix column'
         print '    // mrow_size = number of rows'

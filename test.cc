@@ -54,7 +54,7 @@ void TestContract() {
   ContractSelf(&t6, t3, 2, 3);
 
   assert(t5 == t6);
-
+  
   ContractedTensor<DTensor3, DTensor3> ct7(&t1, 2, &t1, 0);
   std::cout << t5 << std::endl;
   //  std::cout << ct7 << std::endl;
@@ -69,6 +69,39 @@ void TestContract() {
 
   assert(EqualTensors(sct8, t6));
 
+  DTensor3 t7;
+  RandomFill(&t7, 3, 5);
+
+  DTensor3 t8;
+  RandomFill(&t8, 3, 5);
+
+  DTensor3 t9;
+  RandomFill(&t9, 3, 5);
+
+  DTensor5 t10;
+  Contract(&t10, t7, 0, t8, 0);
+
+  DTensor5 t11;
+  Contract(&t11, t7, 0, t9, 0);
+
+  DTensor9 t12;
+  Contract(&t12, t10, 1, t11, 3);
+
+  DTensor8 t13;
+  ContractSelf(&t13, t12, 2, 6);
+  std::cout << t13 << std::endl;
+
+  DTensor4 t14;
+  ContractSelf(&t14, t11, 1, 2);
+
+  DTensor8 t15;
+  Contract(&t15, t10, 1, t14, 2);
+
+  rank_t mapping[8] = {0, 1, 6, 3, 4, 5, 2, 7};
+
+  DTensor8 t16;
+  Rearrange(&t16, t15, mapping);
+  std::cout << t16 << std::endl;
 }
 
 int main(int argc, char **argv) {

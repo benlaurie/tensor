@@ -6,6 +6,7 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_sort_vector.h>
+#include <sys/resource.h>
 
 #include "tensor.h"
 
@@ -628,6 +629,11 @@ void TRGS3(const double a, const double b, const double c,
 }
 
 int main(int argc, char **argv) {
+  struct rlimit mem_limit;
+  mem_limit.rlim_cur = 6500000000;
+  mem_limit.rlim_max = 6500000000;
+  setrlimit(RLIMIT_AS, &mem_limit);
+
   DTensor9 K;
   Make9j(&K);
 
