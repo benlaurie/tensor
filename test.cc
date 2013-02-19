@@ -42,7 +42,7 @@ void TestContract() {
 
   assert(t2 == t4);
 
-  SelfContract2edTensor<DTensor6, 0, 3> sc2t9(&t3, 0, 4);
+  SelfContract2edTensor<DTensor6> sc2t9(&t3, 0, 4);
   std::cout << sc2t9 << std::endl;
 
   assert(EqualTensors(sc2t9,  t4));

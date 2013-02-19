@@ -153,10 +153,21 @@ public:
       elements_.erase(coord);
       return;
     }
+     
     std::pair<typename std::map<Coordinate<rank>, Value>::iterator, bool> ret
         = elements_.insert(EPair(coord, value));
     if (!ret.second)
       ret.first->second = value;
+    else if (elements_.size() == 1)
+      for (uint8_t r = 0; r < rank; ++r)
+        low_[r] = high_[r] = coord[r];
+    else
+      for (uint8_t r = 0; r < rank; ++r)
+        if (coord[r] < low_[r])
+          low_[r] = coord[r];
+        else if (coord[r] > high_[r])
+          high_[r] = coord[r];
+
   }
 
   const Value &Get(uint8_t coords[rank]) const {
@@ -172,6 +183,15 @@ public:
       return zero;
     }
     return i->second;
+  }
+
+  uint8_t Low(uint8_t d) const {
+    assert(d < rank);
+    return low_[d];
+  }
+  uint8_t High(uint8_t d) const {
+    assert(d < rank);
+    return high_[d];
   }
 
   void Print(std::ostream &os) const {
@@ -221,6 +241,8 @@ public:
 
 private:
   std::map<Coordinate<rank>, Value> elements_;
+  uint8_t low_[rank];
+  uint8_t high_[rank];
 };
 
 template <rank_t rank, class Value>
@@ -293,6 +315,26 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
 
   const ValueType Get(const Coordinate<Rank> &coords) const {
     return Get(coords.coords());
+  }
+
+  uint8_t Low(uint8_t d) const {
+    assert(d < Rank);
+    if (d  < Tensor1::Rank)
+      return t1_->Low(d);
+    else if (d < Tensor1::Rank + d2_)
+      return t2_->Low(d - Tensor1::Rank);
+    else
+      return t2_->Low(d + 1 - Tensor1::Rank);
+  }
+
+  uint8_t High(uint8_t d) const {
+    assert(d < Rank);
+    if (d  < Tensor1::Rank)
+      return t1_->High(d);
+    else if (d < Tensor1::Rank + d2_)
+      return t2_->High(d - Tensor1::Rank);
+    else
+      return t2_->High(d + 1 - Tensor1::Rank);
   }
 
   class Iterator {
@@ -404,6 +446,7 @@ template <class Tensor1> class SelfContractedTensor {
 
   SelfContractedTensor(const Tensor1 *t, rank_t d1, rank_t d2)
       : t_(t), d1_(d1), d2_(d2) {
+    assert(d1_ < d2_);
   }
 
   const ValueType Get(const uint8_t coords[Rank]) const {
@@ -413,6 +456,22 @@ template <class Tensor1> class SelfContractedTensor {
 
   const ValueType Get(const Coordinate<Rank> &coords) const {
     return Get(coords.coords());
+  }
+
+  uint8_t Low(uint8_t d) const {
+    assert(d < Rank);
+    if (d < d2_)
+      return t_->Low(d);
+    else
+      return t_->Low(d + 1);
+  }
+
+  uint8_t High(uint8_t d) const {
+    assert(d < Rank);
+    if (d < d2_)
+      return t_->High(d);
+    else
+      return t_->High(d + 1);
   }
 
   class Iterator {
@@ -506,9 +565,7 @@ std::ostream &operator<<(std::ostream &out,
   return out;
 }
 
-// We ought to find a better way than low/high
-template <class Tensor1, uint8_t low, uint8_t high>
-class SelfContract2edTensor {
+template <class Tensor1> class SelfContract2edTensor {
  public:
   static const rank_t Rank = Tensor1::Rank - 2;
   typedef typename Tensor1::ValueType ValueType;
@@ -534,6 +591,8 @@ class SelfContract2edTensor {
 
   const ValueType Get(const uint8_t coords[Rank]) const {
     ValueType ret = 0;
+    uint8_t low = std::max(t_->Low(d1_), t_->Low(d2_));
+    uint8_t high = std::min(t_->High(d1_), t_->High(d2_));
     for (uint8_t x = low; x <= high; ++x) {
       Coordinate<Tensor1::Rank> c;
       InnerCoord(&c, coords, x);
@@ -544,6 +603,26 @@ class SelfContract2edTensor {
 
   const ValueType Get(const Coordinate<Rank> &coords) const {
     return Get(coords.coords());
+  }
+
+  uint8_t Low(uint8_t d) const {
+    assert(d < Rank);
+    if (d < d1_)
+      return t_->Low(d);
+    else if (d + 1 < d2_)
+      return t_->Low(d + 1);
+    else
+      return t_->Low(d + 2);
+  }
+
+  uint8_t High(uint8_t d) const {
+    assert(d < Rank);
+    if (d < d1_)
+      return t_->High(d);
+    else if (d + 1 < d2_)
+      return t_->High(d + 1);
+    else
+      return t_->High(d + 2);
   }
 
   class Iterator {
@@ -595,6 +674,7 @@ class SelfContract2edTensor {
           break;
         if (i_->second != 0.) {
           Coordinate<Tensor1::Rank> new_coord = i_->first;
+          uint8_t low = std::max(t_->t_->Low(t_->d1_), t_->t_->Low(t_->d2_));
           for (uint8_t x = low; x < i_->first[t_->d1_] ; ++x) {
             new_coord.Set(t_->d1_, x);
             new_coord.Set(t_->d2_, x);
@@ -617,6 +697,7 @@ class SelfContract2edTensor {
       val_.first = i_->first.except2(t_->d1_, t_->d2_);
       Coordinate<Tensor1::Rank> new_coord = i_->first;
       val_.second = 0;
+      uint8_t high = std::min(t_->t_->High(t_->d1_), t_->t_->High(t_->d2_));
       for (uint8_t x = i_->first[t_->d1_]; x <= high ; ++x) {
         new_coord.Set(t_->d1_, x);
         new_coord.Set(t_->d2_, x);
@@ -653,9 +734,9 @@ class SelfContract2edTensor {
   rank_t d2_;
 };
 
-template <class Tensor1, uint8_t low, uint8_t high>
+template <class Tensor1>
 std::ostream &operator<<(std::ostream &out,
-                         const SelfContract2edTensor<Tensor1, low, high> &t) {
+                         const SelfContract2edTensor<Tensor1> &t) {
   t.Print(out);
   return out;
 }
