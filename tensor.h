@@ -14,6 +14,11 @@
 // compilers.
 typedef int8_t rank_t;
 
+inline bool EffectivelyZero(double value) {
+  return fabs(value) < 1e-12;
+}
+
+
 template <rank_t rank> class Coordinate {
 public:
   explicit Coordinate(const uint8_t coords[rank]) {
@@ -149,7 +154,7 @@ public:
     assert(!isinf(value));
     assert(!isnan(value));
     // FIXME: use condi
-    if (fabs(value) < 1e-12) {
+    if (EffectivelyZero(value)) {
       elements_.erase(coord);
       return;
     }
