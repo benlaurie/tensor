@@ -315,7 +315,10 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
     uint8_t r1 = c1[d1_];
     Coordinate<Tensor2::Rank> c2(&coords[Tensor1::Rank], d2_, r1,
                                  &coords[Tensor1::Rank + d2_]);
-    return t1_->Get(c1) * t2_->Get(c2);
+    ValueType value = t1_->Get(c1) * t2_->Get(c2);
+    if (EffectivelyZero(value))
+      return 0;
+    return value;
   }
 
   const ValueType Get(const Coordinate<Rank> &coords) const {
@@ -405,6 +408,9 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
 
       val_.first.Set(i1_->first, i2_->first.except(t_->d2_));
       val_.second = i1_->second * i2_->second;
+      // FIXME: we could handle this in Next()?
+      if (EffectivelyZero(val_.second))
+        val_.second = 0;
     }
 
     const ContractedTensor *t_;
@@ -603,6 +609,8 @@ template <class Tensor1> class SelfContract2edTensor {
       InnerCoord(&c, coords, x);
       ret += t_->Get(c);
     }
+    if (EffectivelyZero(ret))
+      return 0;
     return ret;
   }
 
@@ -709,6 +717,8 @@ template <class Tensor1> class SelfContract2edTensor {
         ValueType v = t_->t_->Get(new_coord);
         val_.second += v;
       }
+      if (EffectivelyZero(val_.second))
+        val_.second = 0;
     }
 
     const SelfContract2edTensor *t_;
