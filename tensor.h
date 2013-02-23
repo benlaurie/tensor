@@ -164,15 +164,14 @@ public:
     if (!ret.second)
       ret.first->second = value;
     else if (elements_.size() == 1)
-      for (uint8_t r = 0; r < rank; ++r)
+      for (rank_t r = 0; r < rank; ++r)
         low_[r] = high_[r] = coord[r];
     else
-      for (uint8_t r = 0; r < rank; ++r)
+      for (rank_t r = 0; r < rank; ++r)
         if (coord[r] < low_[r])
           low_[r] = coord[r];
         else if (coord[r] > high_[r])
           high_[r] = coord[r];
-
   }
 
   const Value &Get(uint8_t coords[rank]) const {
