@@ -507,8 +507,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V07+V14, V10, V11, V16, V17
   //V(Contract(&KKSUSUSVSV, KSUSU4, 0, KSVSV4, 9));
-  typedef ContractedTensor<DTensor17, DTensor17> KKSUSUSVSV_t;
-  KKSUSUSVSV_t KKSUSUSVSV(&KSUSU4, 0, &KSVSV4, 9);
+  typedef ContractedTensor<DTensor17, 0, DTensor17, 9> KKSUSUSVSV_t;
+  KKSUSUSVSV_t KKSUSUSVSV(&KSUSU4, &KSVSV4);
 
   //DTensor32 KKSUSUSVSV1;
   // K00+V01, K01+U01, K02+U12, K03+V11, K04, K05+U07, K07+U14, K08, U00, U02,

@@ -302,21 +302,21 @@ void Contract(Tensor<rank1 + rank2 - 1, Value> *t_out,
   }
 }
 
-template <class Tensor1, class Tensor2> class ContractedTensor {
+template <class Tensor1, rank_t d1, class Tensor2, rank_t d2>
+class ContractedTensor {
  public:
   static const rank_t Rank = Tensor1::Rank + Tensor2::Rank - 1;
   typedef typename Tensor1::ValueType ValueType;
 
-  ContractedTensor(const Tensor1 *t1, uint8_t d1,
-                   const Tensor2 *t2, uint8_t d2)
-      : t1_(t1), t2_(t2), d1_(d1), d2_(d2) {
+  ContractedTensor(const Tensor1 *t1, const Tensor2 *t2)
+      : t1_(t1), t2_(t2) {
   }
 
   const ValueType Get(const uint8_t coords[Rank]) const {
     Coordinate<Tensor1::Rank> c1(coords);
-    uint8_t r1 = c1[d1_];
-    Coordinate<Tensor2::Rank> c2(&coords[Tensor1::Rank], d2_, r1,
-                                 &coords[Tensor1::Rank + d2_]);
+    uint8_t r1 = c1[d1];
+    Coordinate<Tensor2::Rank> c2(&coords[Tensor1::Rank], d2, r1,
+                                 &coords[Tensor1::Rank + d2]);
     ValueType value = t1_->Get(c1);
     // note that value will have already had the EffectivelyZero test.
     if (value == 0.)
@@ -335,7 +335,7 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
     assert(d < Rank);
     if (d  < Tensor1::Rank)
       return t1_->Low(d);
-    else if (d < Tensor1::Rank + d2_)
+    else if (d < Tensor1::Rank + d2)
       return t2_->Low(d - Tensor1::Rank);
     else
       return t2_->Low(d + 1 - Tensor1::Rank);
@@ -345,7 +345,7 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
     assert(d < Rank);
     if (d  < Tensor1::Rank)
       return t1_->High(d);
-    else if (d < Tensor1::Rank + d2_)
+    else if (d < Tensor1::Rank + d2)
       return t2_->High(d - Tensor1::Rank);
     else
       return t2_->High(d + 1 - Tensor1::Rank);
@@ -401,7 +401,7 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
     void Next() {
       set_ = false;
       while(i1_ != t_->t1_->end()
-            && i1_->first[t_->d1_] != i2_->first[t_->d2_])
+            && i1_->first[d1] != i2_->first[d2])
         Inc();
     }
 
@@ -410,9 +410,9 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
         return;
       set_ = true;
 
-      assert(i1_->first[t_->d1_] == i2_->first[t_->d2_]);
+      assert(i1_->first[d1] == i2_->first[d2]);
 
-      val_.first.Set(i1_->first, i2_->first.except(t_->d2_));
+      val_.first.Set(i1_->first, i2_->first.except(d2));
       val_.second = i1_->second * i2_->second;
       // FIXME: we could handle this in Next()?
       if (EffectivelyZero(val_.second))
@@ -445,13 +445,11 @@ template <class Tensor1, class Tensor2> class ContractedTensor {
  private:
   const Tensor1 *t1_;
   const Tensor2 *t2_;
-  uint8_t d1_;
-  uint8_t d2_;
 };
 
-template <class Tensor1, class Tensor2>
+template <class Tensor1, rank_t d1, class Tensor2, rank_t d2>
 std::ostream &operator<<(std::ostream &out,
-                         const ContractedTensor<Tensor1, Tensor2> &t) {
+                         const ContractedTensor<Tensor1, d1, Tensor2, d2> &t) {
   t.Print(out);
   return out;
 }
