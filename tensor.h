@@ -401,7 +401,8 @@ class ContractedTensor {
     void Next() {
       set_ = false;
       while(i1_ != t_->t1_->end()
-            && i1_->first[d1] != i2_->first[d2])
+            && (i1_->first[d1] != i2_->first[d2]
+                || EffectivelyZero(val_.second = i1_->second * i2_->second)))
         Inc();
     }
 
@@ -413,10 +414,7 @@ class ContractedTensor {
       assert(i1_->first[d1] == i2_->first[d2]);
 
       val_.first.Set(i1_->first, i2_->first.except(d2));
-      val_.second = i1_->second * i2_->second;
-      // FIXME: we could handle this in Next()?
-      if (EffectivelyZero(val_.second))
-        val_.second = 0;
+      // val_.second is already set in Next().
     }
 
     const ContractedTensor *t_;
