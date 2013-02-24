@@ -527,8 +527,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V10, V16, V17 (K04+V07+V14)
   //V(ContractSelf2(&KKSUSUSVSV2, KKSUSUSVSV1, 4, 28));
-  typedef SelfContract2edTensor<KKSUSUSVSV1_t> KKSUSUSVSV2_t;
-  KKSUSUSVSV2_t KKSUSUSVSV2(&KKSUSUSVSV1, 4, 28);
+  typedef SelfContract2edTensor<KKSUSUSVSV1_t, 4, 28> KKSUSUSVSV2_t;
+  KKSUSUSVSV2_t KKSUSUSVSV2(&KKSUSUSVSV1);
 
   //std::cout << "KKSUSUSVSV2 = " << KKSUSUSVSV2 << std::endl;
 
@@ -538,8 +538,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V10, V16, V17 (K05+U07+V04)
   //V(ContractSelf2(&KKSUSUSVSV3, KKSUSUSVSV2, 4, 26));
-  typedef SelfContract2edTensor<KKSUSUSVSV2_t> KKSUSUSVSV3_t;
-  KKSUSUSVSV3_t KKSUSUSVSV3(&KKSUSUSVSV2, 4, 26);
+  typedef SelfContract2edTensor<KKSUSUSVSV2_t, 4, 26> KKSUSUSVSV3_t;
+  KKSUSUSVSV3_t KKSUSUSVSV3(&KKSUSUSVSV2);
 
   //DTensor26 KKSUSUSVSV4;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02,
@@ -547,8 +547,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V10, V16 (K07+U14+V17)
   //V(ContractSelf2(&KKSUSUSVSV4, KKSUSUSVSV3, 4, 27));
-  typedef SelfContract2edTensor<KKSUSUSVSV3_t> KKSUSUSVSV4_t;
-  KKSUSUSVSV4_t KKSUSUSVSV4(&KKSUSUSVSV3, 4, 27);
+  typedef SelfContract2edTensor<KKSUSUSVSV3_t, 4, 27> KKSUSUSVSV4_t;
+  KKSUSUSVSV4_t KKSUSUSVSV4(&KKSUSUSVSV3);
 
   //DTensor25 KKSUSUSVSV5;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
@@ -565,24 +565,24 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K10+V02, K12, K13+V12, K15+V05, K17+V18, K18, V00, V03,
   // V10, V16 (U05+U18+K16)
   //V(ContractSelf2(&KKSUSUSVSV6, KKSUSUSVSV5, 7, 18));
-  typedef SelfContract2edTensor<KKSUSUSVSV5_t> KKSUSUSVSV6_t;
-  KKSUSUSVSV6_t KKSUSUSVSV6(&KKSUSUSVSV5, 7, 18);
+  typedef SelfContract2edTensor<KKSUSUSVSV5_t, 7, 18> KKSUSUSVSV6_t;
+  KKSUSUSVSV6_t KKSUSUSVSV6(&KKSUSUSVSV5);
 
   //DTensor21 KKSUSUSVSV7;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U08, U10, U11, U13, U15, K10+V02, K12, K13+V12, K15+V05, K17+V18, K18, V00,
   // V10, V16 (U06+V03)
   //V(ContractSelf2(&KKSUSUSVSV7, KKSUSUSVSV6, 7, 20));
-  typedef SelfContract2edTensor<KKSUSUSVSV6_t> KKSUSUSVSV7_t;
-  KKSUSUSVSV7_t KKSUSUSVSV7(&KKSUSUSVSV6, 7, 20);
+  typedef SelfContract2edTensor<KKSUSUSVSV6_t, 7, 20> KKSUSUSVSV7_t;
+  KKSUSUSVSV7_t KKSUSUSVSV7(&KKSUSUSVSV6);
 
   //DTensor19 KKSUSUSVSV8;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11, U13, U15, K10+V02, K12, K13+V12, K17+V18, K18, V00,
   // V10, V16 (U08+K15+V05)
   //V(ContractSelf2(&KKSUSUSVSV8, KKSUSUSVSV7, 7, 15));
-  typedef SelfContract2edTensor<KKSUSUSVSV7_t> KKSUSUSVSV8_t;
-  KKSUSUSVSV8_t KKSUSUSVSV8(&KKSUSUSVSV7, 7, 15);
+  typedef SelfContract2edTensor<KKSUSUSVSV7_t, 7, 15> KKSUSUSVSV8_t;
+  KKSUSUSVSV8_t KKSUSUSVSV8(&KKSUSUSVSV7);
 
   //DTensor18 KKSUSUSVSV9;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
@@ -596,8 +596,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // U10, U11+K12, U15, K10+V02, K13+V12, K17+V18, K18, V00, V10 (U13+V16)
   //V(ContractSelf2(&KKSUSUSVSV10, KKSUSUSVSV9, 9, 17));
   // Caching makes this about 4x faster for a 98271 x 82251 calculation
-  typedef SelfContract2edTensor<KKSUSUSVSV9_t, true> KKSUSUSVSV10_t;
-  KKSUSUSVSV10_t KKSUSUSVSV10(&KKSUSUSVSV9, 9, 17);
+  typedef SelfContract2edTensor<KKSUSUSVSV9_t, 9, 17, true> KKSUSUSVSV10_t;
+  KKSUSUSVSV10_t KKSUSUSVSV10(&KKSUSUSVSV9);
 
   DTensor14 KKSUSUSVSV11;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,

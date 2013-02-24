@@ -585,25 +585,22 @@ std::ostream &operator<<(std::ostream &out,
 // Note that for very sparse tensors the cache actually slows it
 // down. Also, of course, the larger the tensor the larger the cache.
 // Only seems to help for the very last tensor.
-template <class Tensor1, bool cache = false> class SelfContract2edTensor {
+template <class Tensor1, rank_t d1, rank_t d2, bool cache = false>
+class SelfContract2edTensor {
  public:
   static const rank_t Rank = Tensor1::Rank - 2;
   typedef typename Tensor1::ValueType ValueType;
 
-  SelfContract2edTensor(const Tensor1 *t, rank_t d1, rank_t d2)
-      : t_(t), d1_(d1), d2_(d2) {
-    if (d1_ > d2_) {
-      d1_ = d2;
-      d2_ = d1;
-    }
+  SelfContract2edTensor(const Tensor1 *t) : t_(t) {
+    assert(d1 < d2);
   }
 
   void InnerCoord(Coordinate<Tensor1::Rank> *c, const uint8_t coords[Rank],
                   uint8_t x) const {
     for (rank_t to = 0, from = 0; to < Tensor1::Rank; ++to)
-      if (to == d1_)
+      if (to == d1)
         c->Set(to, x);
-      else if (to == d2_)
+      else if (to == d2)
         c->Set(to, x);
       else
         c->Set(to, coords[from++]);
@@ -611,8 +608,8 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
 
   const ValueType Get(const uint8_t coords[Rank]) const {
     ValueType ret = 0;
-    uint8_t low = std::max(t_->Low(d1_), t_->Low(d2_));
-    uint8_t high = std::min(t_->High(d1_), t_->High(d2_));
+    uint8_t low = std::max(t_->Low(d1), t_->Low(d2));
+    uint8_t high = std::min(t_->High(d1), t_->High(d2));
     for (uint8_t x = low; x <= high; ++x) {
       Coordinate<Tensor1::Rank> c;
       InnerCoord(&c, coords, x);
@@ -629,9 +626,9 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
 
   uint8_t Low(uint8_t d) const {
     assert(d < Rank);
-    if (d < d1_)
+    if (d < d1)
       return t_->Low(d);
-    else if (d + 1 < d2_)
+    else if (d + 1 < d2)
       return t_->Low(d + 1);
     else
       return t_->Low(d + 2);
@@ -639,9 +636,9 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
 
   uint8_t High(uint8_t d) const {
     assert(d < Rank);
-    if (d < d1_)
+    if (d < d1)
       return t_->High(d);
-    else if (d + 1 < d2_)
+    else if (d + 1 < d2)
       return t_->High(d + 1);
     else
       return t_->High(d + 2);
@@ -691,10 +688,10 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
       typename Tensor1::Iterator end = t_->t_->end();
       for ( ; i_ != end; ++i_) {
         for ( ; i_ != end ; ++i_) {
-          if (i_->first[t_->d1_] == i_->first[t_->d2_]) {
+          if (i_->first[d1] == i_->first[d2]) {
             if (!cache)
               break;
-            Coordinate<Rank> coord = i_->first.except2(t_->d1_, t_->d2_);
+            Coordinate<Rank> coord = i_->first.except2(d1, d2);
             if (i_->second != 0. && done_.find(coord) == done_.end())
               done_.insert(coord);
               break;
@@ -704,12 +701,12 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
           break;
         if (i_->second != 0.) {
           Coordinate<Tensor1::Rank> new_coord = i_->first;
-          uint8_t low = std::max(t_->t_->Low(t_->d1_), t_->t_->Low(t_->d2_));
+          uint8_t low = std::max(t_->t_->Low(d1), t_->t_->Low(d2));
           // Check whether we already handled or will handle this for
           // a lower value of the coordinate.
-          for (uint8_t x = low; x < i_->first[t_->d1_] ; ++x) {
-            new_coord.Set(t_->d1_, x);
-            new_coord.Set(t_->d2_, x);
+          for (uint8_t x = low; x < i_->first[d1] ; ++x) {
+            new_coord.Set(d1, x);
+            new_coord.Set(d2, x);
             if (t_->t_->Get(new_coord) != 0.)
               goto again;
           }
@@ -725,16 +722,16 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
         return;
       set_ = true;
 
-      assert(i_->first[t_->d1_] == i_->first[t_->d2_]);
-      val_.first = i_->first.except2(t_->d1_, t_->d2_);
+      assert(i_->first[d1] == i_->first[d2]);
+      val_.first = i_->first.except2(d1, d2);
       Coordinate<Tensor1::Rank> new_coord = i_->first;
       val_.second = 0;
-      uint8_t high = std::min(t_->t_->High(t_->d1_), t_->t_->High(t_->d2_));
+      uint8_t high = std::min(t_->t_->High(d1), t_->t_->High(d2));
       // Note that the value for x < i_->first[t_->d1_] is known to be
       // zero if we are not caching.
-      for (uint8_t x = cache ? 0 : i_->first[t_->d1_]; x <= high ; ++x) {
-        new_coord.Set(t_->d1_, x);
-        new_coord.Set(t_->d2_, x);
+      for (uint8_t x = cache ? 0 : i_->first[d1]; x <= high ; ++x) {
+        new_coord.Set(d1, x);
+        new_coord.Set(d2, x);
         ValueType v = t_->t_->Get(new_coord);
         val_.second += v;
       }
@@ -767,13 +764,11 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
 
  private:
   const Tensor1 *t_;
-  rank_t d1_;
-  rank_t d2_;
 };
 
-template <class Tensor1>
+template <class Tensor1, rank_t d1, rank_t d2>
 std::ostream &operator<<(std::ostream &out,
-                         const SelfContract2edTensor<Tensor1> &t) {
+                         const SelfContract2edTensor<Tensor1, d1, d2> &t) {
   t.Print(out);
   return out;
 }
