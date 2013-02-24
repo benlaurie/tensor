@@ -595,13 +595,14 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11+K12, U15, K10+V02, K13+V12, K17+V18, K18, V00, V10 (U13+V16)
   //V(ContractSelf2(&KKSUSUSVSV10, KKSUSUSVSV9, 9, 17));
-  typedef SelfContract2edTensor<KKSUSUSVSV9_t> KKSUSUSVSV10_t;
+  // Caching makes this about 4x faster for a 98271 x 82251 calculation
+  typedef SelfContract2edTensor<KKSUSUSVSV9_t, true> KKSUSUSVSV10_t;
   KKSUSUSVSV10_t KKSUSUSVSV10(&KKSUSUSVSV9, 9, 17);
 
   DTensor14 KKSUSUSVSV11;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11+K12, K10+V02, K13+V12, K18, V00, V10 (U15+K17+V18)
-  V(ContractSelf2(&KKSUSUSVSV11, KKSUSUSVSV10, 9, 12));
+  V(ContractSelf2(&KKSUSUSVSV11, KKSUSUSVSV10, 9, 12, 100));
 
   rank_t mapping[14] = {4, 11, 12, 0, 9, 5, 1, 6, 7, 2, 8, 13, 3, 10};
   V(Rearrange(C, KKSUSUSVSV11, mapping));

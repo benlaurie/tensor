@@ -4,10 +4,13 @@
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 #include <gsl/gsl_matrix.h>
 
 #include <iostream>
 #include <map>
+#include <set>
 
 // Should be unsigned but causes warning "comparison is always false
 // due to limited range of data" when rank 0 is used with some
@@ -150,7 +153,7 @@ public:
     Set(coord, value);
   }
 
-  void Set(Coordinate<rank> coord, const Value &value) {
+  void Set(const Coordinate<rank> &coord, const Value &value) {
     assert(!isinf(value));
     assert(!isnan(value));
     // FIXME: use condi
@@ -579,7 +582,9 @@ std::ostream &operator<<(std::ostream &out,
   return out;
 }
 
-template <class Tensor1> class SelfContract2edTensor {
+// Note that for very sparse tensors the cache actually slows it
+// down. Also, of course, the larger the tensor the larger the cache.
+template <class Tensor1, bool cache = false> class SelfContract2edTensor {
  public:
   static const rank_t Rank = Tensor1::Rank - 2;
   typedef typename Tensor1::ValueType ValueType;
@@ -684,9 +689,17 @@ template <class Tensor1> class SelfContract2edTensor {
       set_ = false;
       typename Tensor1::Iterator end = t_->t_->end();
       for ( ; i_ != end; ++i_) {
-        while(i_ != end && i_->first[t_->d1_] != i_->first[t_->d2_])
-          ++i_;
-        if (i_ == end)
+        for ( ; i_ != end ; ++i_) {
+          if (i_->first[t_->d1_] == i_->first[t_->d2_]) {
+            if (!cache)
+              break;
+            Coordinate<Rank> coord = i_->first.except2(t_->d1_, t_->d2_);
+            if (i_->second != 0. && done_.find(coord) == done_.end())
+              done_.insert(coord);
+              break;
+          }
+        }
+        if (i_ == end || cache)
           break;
         if (i_->second != 0.) {
           Coordinate<Tensor1::Rank> new_coord = i_->first;
@@ -732,6 +745,7 @@ template <class Tensor1> class SelfContract2edTensor {
     typename Tensor1::Iterator i_;
     std::pair<Coordinate<Rank>, ValueType> val_;
     bool set_;
+    std::set<Coordinate<Rank> > done_;
   };
 
   Iterator begin() const {
@@ -830,16 +844,31 @@ void ContractSelf(OutTensor *t_out, const InTensor &t_in,
   }
 }
 
+void Interval() {
+  static struct rusage prev;
+  struct rusage cur;
+
+  assert(getrusage(RUSAGE_SELF, &cur) == 0);
+  struct timeval t;
+  timersub(&cur.ru_utime, &prev.ru_utime, &t);
+  double tt = t.tv_sec + t.tv_usec/1000000.;
+  std::cout << "utime = " << tt << std::endl;
+
+  prev = cur;
+}
+
 template <class OutTensor, class InTensor>
 void ContractSelf2(OutTensor *t_out,
-                   const InTensor &t_in, uint8_t d1, uint8_t d2) {
-  int n = 0;
+                   const InTensor &t_in, const uint8_t d1, const uint8_t d2,
+                   const unsigned interval = 100000) {
+  unsigned n = 0;
   typename InTensor::Iterator i1;
   for (i1 = t_in.begin(); i1 != t_in.end(); ++i1) {
     if (i1->first.coord(d1) == i1->first.coord(d2)) {
-      if (++n == 1000000) {
+      if (++n == interval) {
         n = 0;
         std::cout << i1->first << std::endl;
+        Interval();
       }
       Coordinate<InTensor::Rank - 2> new_coord;
       new_coord.Set(0, i1->first.except2(d1, d2));
