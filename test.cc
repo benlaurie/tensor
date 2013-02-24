@@ -64,7 +64,7 @@ void TestContract() {
 
   assert(EqualTensors(ct7, t6));
 
-  SelfContractedTensor<DTensor6> sct8(&t3, 2, 3);
+  SelfContractedTensor<DTensor6, 2, 3> sct8(&t3);
   std::cout << sct8 << std::endl;
 
   assert(EqualTensors(sct8, t6));

@@ -456,18 +456,18 @@ std::ostream &operator<<(std::ostream &out,
   return out;
 }
 
-template <class Tensor1> class SelfContractedTensor {
+template <class Tensor1, rank_t d1, rank_t d2> class SelfContractedTensor {
  public:
   static const rank_t Rank = Tensor1::Rank - 1;
   typedef typename Tensor1::ValueType ValueType;
 
-  SelfContractedTensor(const Tensor1 *t, rank_t d1, rank_t d2)
-      : t_(t), d1_(d1), d2_(d2) {
-    assert(d1_ < d2_);
+  SelfContractedTensor(const Tensor1 *t)
+      : t_(t) {
+    assert(d1 < d2);
   }
 
   const ValueType Get(const uint8_t coords[Rank]) const {
-    Coordinate<Tensor1::Rank> c(coords, d2_, coords[d1_], &coords[d2_]);
+    Coordinate<Tensor1::Rank> c(coords, d2, coords[d1], &coords[d2]);
     return t_->Get(c);
   }
 
@@ -477,7 +477,7 @@ template <class Tensor1> class SelfContractedTensor {
 
   uint8_t Low(uint8_t d) const {
     assert(d < Rank);
-    if (d < d2_)
+    if (d < d2)
       return t_->Low(d);
     else
       return t_->Low(d + 1);
@@ -485,7 +485,7 @@ template <class Tensor1> class SelfContractedTensor {
 
   uint8_t High(uint8_t d) const {
     assert(d < Rank);
-    if (d < d2_)
+    if (d < d2)
       return t_->High(d);
     else
       return t_->High(d + 1);
@@ -533,7 +533,7 @@ template <class Tensor1> class SelfContractedTensor {
     void Next() {
       set_ = false;
       while(i_ != t_->t_->end()
-            && i_->first[t_->d1_] != i_->first[t_->d2_])
+            && i_->first[d1] != i_->first[d2])
         ++i_;
     }
 
@@ -542,8 +542,8 @@ template <class Tensor1> class SelfContractedTensor {
         return;
       set_ = true;
 
-      assert(i_->first[t_->d1_] == i_->first[t_->d2_]);
-      val_.first = i_->first.except(t_->d2_);
+      assert(i_->first[d1] == i_->first[d2]);
+      val_.first = i_->first.except(d2);
       val_.second = i_->second;
     }
 
@@ -571,13 +571,11 @@ template <class Tensor1> class SelfContractedTensor {
 
  private:
   const Tensor1 *t_;
-  rank_t d1_;
-  rank_t d2_;
 };
 
-template <class Tensor1>
+template <class Tensor1, rank_t d1, rank_t d2>
 std::ostream &operator<<(std::ostream &out,
-                         const SelfContractedTensor<Tensor1> &t) {
+                         const SelfContractedTensor<Tensor1, d1, d2> &t) {
   t.Print(out);
   return out;
 }

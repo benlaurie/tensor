@@ -516,8 +516,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K10+V02, K11, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V04, V07+V14, V10, V16, V17
   //V(ContractSelf(&KKSUSUSVSV1, KKSUSUSVSV, 3, 30));
-  typedef SelfContractedTensor<KKSUSUSVSV_t> KKSUSUSVSV1_t;
-  KKSUSUSVSV1_t KKSUSUSVSV1(&KKSUSUSVSV, 3, 30);
+  typedef SelfContractedTensor<KKSUSUSVSV_t, 3, 30> KKSUSUSVSV1_t;
+  KKSUSUSVSV1_t KKSUSUSVSV1(&KKSUSUSVSV);
  
   //std::cout << "KKSUSUSVSV1 = " << KKSUSUSVSV1 << std::endl;
 
@@ -556,8 +556,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K10+V02, K12, K13+V12, K15+V05, K16, K17+V18, K18, V00, V03,
   // V10, V16
   //V(ContractSelf(&KKSUSUSVSV5, KKSUSUSVSV4, 6, 15));
-  typedef SelfContractedTensor<KKSUSUSVSV4_t> KKSUSUSVSV5_t;
-  KKSUSUSVSV5_t KKSUSUSVSV5(&KKSUSUSVSV4, 6, 15);
+  typedef SelfContractedTensor<KKSUSUSVSV4_t, 6, 15> KKSUSUSVSV5_t;
+  KKSUSUSVSV5_t KKSUSUSVSV5(&KKSUSUSVSV4);
 
   //DTensor23 KKSUSUSVSV6;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
@@ -588,8 +588,8 @@ void DoLoopContraction(DTensor14 *C, const DTensor9 &K, const DTensor9 &SU,
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
   // U10, U11+K12, U13, U15, K10+V02, K13+V12, K17+V18, K18, V00, V10, V16
   //V(ContractSelf(&KKSUSUSVSV9, KKSUSUSVSV8, 8, 12));
-  typedef SelfContractedTensor<KKSUSUSVSV8_t> KKSUSUSVSV9_t;
-  KKSUSUSVSV9_t KKSUSUSVSV9(&KKSUSUSVSV8, 8, 12);
+  typedef SelfContractedTensor<KKSUSUSVSV8_t, 8, 12> KKSUSUSVSV9_t;
+  KKSUSUSVSV9_t KKSUSUSVSV9(&KKSUSUSVSV8);
 
   //DTensor16 KKSUSUSVSV10;
   // K00+V01, K01+U01, K02+U12, K03+V11, K08, U00, U02+K11,
