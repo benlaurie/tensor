@@ -584,6 +584,7 @@ std::ostream &operator<<(std::ostream &out,
 
 // Note that for very sparse tensors the cache actually slows it
 // down. Also, of course, the larger the tensor the larger the cache.
+// Only seems to help for the very last tensor.
 template <class Tensor1, bool cache = false> class SelfContract2edTensor {
  public:
   static const rank_t Rank = Tensor1::Rank - 2;
@@ -704,8 +705,8 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
         if (i_->second != 0.) {
           Coordinate<Tensor1::Rank> new_coord = i_->first;
           uint8_t low = std::max(t_->t_->Low(t_->d1_), t_->t_->Low(t_->d2_));
-          // Check whether we already handled this for a lower value
-          // of the coordinate.
+          // Check whether we already handled or will handle this for
+          // a lower value of the coordinate.
           for (uint8_t x = low; x < i_->first[t_->d1_] ; ++x) {
             new_coord.Set(t_->d1_, x);
             new_coord.Set(t_->d2_, x);
@@ -730,8 +731,8 @@ template <class Tensor1, bool cache = false> class SelfContract2edTensor {
       val_.second = 0;
       uint8_t high = std::min(t_->t_->High(t_->d1_), t_->t_->High(t_->d2_));
       // Note that the value for x < i_->first[t_->d1_] is known to be
-      // zero.
-      for (uint8_t x = i_->first[t_->d1_]; x <= high ; ++x) {
+      // zero if we are not caching.
+      for (uint8_t x = cache ? 0 : i_->first[t_->d1_]; x <= high ; ++x) {
         new_coord.Set(t_->d1_, x);
         new_coord.Set(t_->d2_, x);
         ValueType v = t_->t_->Get(new_coord);
