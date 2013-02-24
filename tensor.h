@@ -868,7 +868,7 @@ void ContractSelf2(OutTensor *t_out,
     if (i1->first.coord(d1) == i1->first.coord(d2)) {
       if (++n == interval) {
         n = 0;
-        std::cout << i1->first << std::endl;
+        std::cout << i1->first << ' ';
         Interval();
       }
       Coordinate<InTensor::Rank - 2> new_coord;
