@@ -333,6 +333,11 @@ class ContractedTensor {
 
   uint8_t Low(uint8_t d) const {
     assert(d < Rank);
+    /* would be correct, but hurts performance
+    if (d == d1)
+      return std::max(t1_->Low(d1), t2_->Low(d2));
+    else
+    */
     if (d  < Tensor1::Rank)
       return t1_->Low(d);
     else if (d < Tensor1::Rank + d2)
@@ -343,6 +348,11 @@ class ContractedTensor {
 
   uint8_t High(uint8_t d) const {
     assert(d < Rank);
+    /* would be correct, but hurts performance
+    if (d == d1)
+      return std::min(t1_->High(d1), t2_->High(d2));
+    else
+    */
     if (d  < Tensor1::Rank)
       return t1_->High(d);
     else if (d < Tensor1::Rank + d2)
